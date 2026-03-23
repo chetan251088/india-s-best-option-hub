@@ -15,11 +15,25 @@ export default function DashboardLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [timeToExpiry, setTimeToExpiry] = useState("");
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshCountdown, setRefreshCountdown] = useState(30);
 
   useKeyboardShortcuts({
     onToggleSearch: () => setSearchOpen(true),
     onToggleAlerts: () => setAlertsOpen(true),
   });
+
+  // Auto-refresh countdown
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const interval = setInterval(() => {
+      setRefreshCountdown(prev => {
+        if (prev <= 1) return 30; // Reset countdown
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
 
   // Calculate time to nearest expiry
   useEffect(() => {
