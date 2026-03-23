@@ -5,13 +5,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell, LineChart, Line, ComposedChart, Area } from "recharts";
-import { getOptionChain, getMaxPain, generatePCRHistory, expiryDates } from "@/lib/mockData";
+import { getMaxPain, generatePCRHistory } from "@/lib/mockData";
 import { OIHeatmap } from "@/components/OIHeatmap";
 import { SupportResistance } from "@/components/SupportResistance";
+import { useLiveOptionChain } from "@/hooks/useNSEData";
+import { Wifi, WifiOff } from "lucide-react";
 
 export default function OIAnalysis() {
   const [symbol, setSymbol] = useState("NIFTY");
-  const { data: chain, spotPrice } = useMemo(() => getOptionChain(symbol), [symbol]);
+  const { data: liveData } = useLiveOptionChain(symbol);
+  const chain = liveData?.chain || [];
+  const spotPrice = liveData?.spotPrice || 0;
+  const isLive = liveData?.isLive || false;
   const maxPain = useMemo(() => getMaxPain(chain), [chain]);
   const pcrHistory = useMemo(() => generatePCRHistory(), []);
 
@@ -89,7 +94,13 @@ export default function OIAnalysis() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">OI Analysis</h1>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className={`gap-1 text-[10px] ${isLive ? "border-bullish text-bullish" : ""}`}>
+            {isLive ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+            {isLive ? "LIVE" : "MOCK"}
+          </Badge>
           <p className="text-sm text-muted-foreground">Open Interest · Heatmap · S/R Levels · Multi-Expiry · IV Smile</p>
+        </div>
         </div>
         <Select value={symbol} onValueChange={setSymbol}>
           <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue /></SelectTrigger>

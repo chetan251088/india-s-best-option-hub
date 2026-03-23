@@ -2,22 +2,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { indicesData, marketStats, futuresData, mostActiveFnO, sectorData, generateIntradayData, generateVIXHistory } from "@/lib/mockData";
-import { TrendingUp, TrendingDown, Activity, BarChart3, Users, Clock, Zap, Globe } from "lucide-react";
+import { marketStats, futuresData, mostActiveFnO, sectorData, generateIntradayData, generateVIXHistory } from "@/lib/mockData";
+import { useLiveIndices, useMarketStatus } from "@/hooks/useNSEData";
+import { TrendingUp, TrendingDown, Activity, BarChart3, Users, Clock, Zap, Globe, Wifi, WifiOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, Area } from "recharts";
 
 export default function Index() {
   const navigate = useNavigate();
-  const niftyIntraday = useMemo(() => generateIntradayData(24125.45, 0.5), []);
-  const bankNiftyIntraday = useMemo(() => generateIntradayData(52031, 0.6), []);
+  const { data: indicesResult, isLoading: indicesLoading } = useLiveIndices();
+  const { data: marketStatusResult } = useMarketStatus();
+
+  const indices = indicesResult?.data || [];
+  const isLive = indicesResult?.isLive || false;
+  const isOpen = marketStatusResult?.isOpen ?? false;
+  const marketStatus = marketStatusResult?.status || "Closed";
+
+  const niftyIntraday = useMemo(() => generateIntradayData(indices[0]?.prevClose || 24125.45, 0.5), [indices]);
+  const bankNiftyIntraday = useMemo(() => generateIntradayData(indices[1]?.prevClose || 52031, 0.6), [indices]);
   const vixHistory = useMemo(() => generateVIXHistory(), []);
 
   const now = new Date();
-  const hours = now.getHours();
-  const marketStatus = hours >= 9 && hours < 15 ? "Market Open" : hours === 15 && now.getMinutes() <= 30 ? "Market Open" : "Market Closed";
-  const isOpen = marketStatus === "Market Open";
 
   return (
     <div className="space-y-5">
@@ -28,9 +34,13 @@ export default function Index() {
           <p className="text-sm text-muted-foreground">NSE F&O Market Overview · {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short", year: "numeric" })}</p>
         </div>
         <div className="flex items-center gap-3">
+          <Badge variant="outline" className={`gap-1.5 text-[10px] ${isLive ? "border-bullish text-bullish" : "border-muted-foreground text-muted-foreground"}`}>
+            {isLive ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+            {isLive ? "LIVE" : "MOCK"}
+          </Badge>
           <Badge variant={isOpen ? "default" : "secondary"} className={`gap-1.5 ${isOpen ? "bg-bullish text-bullish-foreground" : ""}`}>
             <Clock className="h-3 w-3" />
-            {marketStatus}
+            Market {marketStatus}
           </Badge>
           <span className="text-xs text-muted-foreground font-mono">{now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} IST</span>
         </div>
@@ -38,7 +48,7 @@ export default function Index() {
 
       {/* Ticker Tape */}
       <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-thin">
-        {indicesData.map((idx) => {
+        {indices.map((idx) => {
           const pos = idx.change >= 0;
           return (
             <div key={idx.symbol} className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-card border border-border shrink-0">
@@ -61,7 +71,7 @@ export default function Index() {
 
       {/* Index Cards with Sparklines */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {indicesData.map((index, idx) => {
+        {indices.map((index, idx) => {
           const isPositive = index.change >= 0;
           const intraday = idx === 0 ? niftyIntraday : idx === 1 ? bankNiftyIntraday : generateIntradayData(index.prevClose, 0.4);
           return (
@@ -341,7 +351,7 @@ export default function Index() {
         >
           <CardContent className="p-0">
             <p className="text-sm font-medium">OI Analysis</p>
-            <p className="text-[10px] text-muted-foreground">Open Interest →</p>
+            <p className="text-[10px] text-muted-foreground">Deep Dive →</p>
           </CardContent>
         </Card>
       </div>
