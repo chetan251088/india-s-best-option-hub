@@ -3,28 +3,56 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { marketStats, futuresData, mostActiveFnO, sectorData, generateIntradayData, generateVIXHistory, topGainers, topLosers, getMarketBreadth } from "@/lib/mockData";
-import { useLiveIndices, useMarketStatus } from "@/hooks/useNSEData";
-import { TrendingUp, TrendingDown, Activity, BarChart3, Users, Clock, Zap, Globe, Wifi, WifiOff, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useLiveIndices, useMarketStatus, useExpiryList } from "@/hooks/useNSEData";
+import { DashboardSkeleton } from "@/components/LoadingSkeletons";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { TrendingUp, TrendingDown, Activity, BarChart3, Users, Clock, Zap, Globe, Wifi, WifiOff, ArrowUpRight, ArrowDownRight, CalendarClock, Plane } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, Area, BarChart, Bar, CartesianGrid, Cell, ReferenceLine, ComposedChart } from "recharts";
+
+// Nearest expiry contract data (NSE + MCX)
+const EXPIRY_CONTRACTS = [
+  { symbol: "NIFTY", exchange: "NSE", lotSize: 25, type: "Weekly" },
+  { symbol: "BANKNIFTY", exchange: "NSE", lotSize: 15, type: "Weekly" },
+  { symbol: "FINNIFTY", exchange: "NSE", lotSize: 25, type: "Monthly" },
+  { symbol: "MIDCPNIFTY", exchange: "NSE", lotSize: 50, type: "Monthly" },
+  { symbol: "CRUDEOIL", exchange: "MCX", lotSize: 100, type: "Monthly" },
+  { symbol: "GOLD", exchange: "MCX", lotSize: 100, type: "Monthly" },
+  { symbol: "SILVER", exchange: "MCX", lotSize: 30, type: "Monthly" },
+  { symbol: "NATURALGAS", exchange: "MCX", lotSize: 1250, type: "Monthly" },
+];
+
+function getTimeToExpiry(expiryDate: string): string {
+  const expiry = new Date(expiryDate + "T15:30:00+05:30");
+  const now = new Date();
+  const diff = expiry.getTime() - now.getTime();
+  if (diff <= 0) return "Expired";
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  if (days === 0) return `${hours}h left`;
+  return `${days}d ${hours}h`;
+}
 
 export default function Index() {
   const navigate = useNavigate();
   const { data: indicesResult, isLoading: indicesLoading } = useLiveIndices();
   const { data: marketStatusResult } = useMarketStatus();
+  const { data: niftyExpiry } = useExpiryList("NIFTY");
+  const { data: bnfExpiry } = useExpiryList("BANKNIFTY");
 
   const indices = indicesResult?.data || [];
   const isLive = indicesResult?.isLive || false;
   const isOpen = marketStatusResult?.isOpen ?? false;
   const marketStatus = marketStatusResult?.status || "Closed";
+  const giftNifty = marketStatusResult?.giftNifty;
+  const indicativeNifty = marketStatusResult?.indicativeNifty;
 
   const niftyIntraday = useMemo(() => generateIntradayData(indices[0]?.prevClose || 24125.45, 0.5), [indices]);
   const bankNiftyIntraday = useMemo(() => generateIntradayData(indices[1]?.prevClose || 52031, 0.6), [indices]);
   const vixHistory = useMemo(() => generateVIXHistory(), []);
   const breadth = useMemo(() => getMarketBreadth(), []);
 
-  // Futures premium/discount chart data
   const futuresPremiumChart = useMemo(() => {
     return futuresData.map(f => ({
       label: `${f.symbol} ${f.expiry}`,
@@ -35,8 +63,30 @@ export default function Index() {
     }));
   }, []);
 
+  // Build expiry timeline
+  const nearestExpiries = useMemo(() => {
+    const nExpiry = niftyExpiry?.expiries?.[0]?.value || "";
+    const bnExpiry = bnfExpiry?.expiries?.[0]?.value || "";
+    return EXPIRY_CONTRACTS.map(c => {
+      let expDate = "";
+      if (c.symbol === "NIFTY") expDate = nExpiry;
+      else if (c.symbol === "BANKNIFTY") expDate = bnExpiry;
+      else if (c.symbol === "FINNIFTY") expDate = niftyExpiry?.expiries?.[1]?.value || nExpiry;
+      else if (c.symbol === "MIDCPNIFTY") expDate = niftyExpiry?.expiries?.[1]?.value || nExpiry;
+      // MCX contracts use approximate dates
+      else {
+        const now = new Date();
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        expDate = lastDay.toISOString().split("T")[0];
+      }
+      return { ...c, expiry: expDate, timeLeft: expDate ? getTimeToExpiry(expDate) : "N/A" };
+    });
+  }, [niftyExpiry, bnfExpiry]);
+
+  if (indicesLoading) return <DashboardSkeleton />;
+
   const now = new Date();
-  const tooltipStyle = { backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" };
+  const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 
   return (
     <div className="space-y-5">
