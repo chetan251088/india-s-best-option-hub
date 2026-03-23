@@ -480,6 +480,128 @@ export default function Index() {
         </CardContent>
       </Card>
 
+      {/* ── Market Breadth Indicators ── */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        {/* A/D Line vs Nifty */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Advance/Decline Line vs Nifty (30 Days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={breadth.advDecLine}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
+                  <XAxis dataKey="time" tick={{ fontSize: 8, fill: "hsl(215 15% 55%)" }} />
+                  <YAxis yAxisId="ad" tick={{ fontSize: 8, fill: "hsl(215 15% 55%)" }} />
+                  <YAxis yAxisId="nifty" orientation="right" tick={{ fontSize: 8, fill: "hsl(215 15% 55%)" }} domain={["auto", "auto"]} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Line yAxisId="ad" type="monotone" dataKey="adLine" stroke="hsl(210 100% 52%)" strokeWidth={1.5} dot={false} name="A/D Line" />
+                  <Line yAxisId="nifty" type="monotone" dataKey="nifty" stroke="hsl(38 92% 50%)" strokeWidth={1.5} dot={false} name="Nifty" />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* New Highs vs Lows */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">New 52W Highs vs Lows (20 Days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={breadth.highsLows} barGap={0}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
+                  <XAxis dataKey="time" tick={{ fontSize: 8, fill: "hsl(215 15% 55%)" }} />
+                  <YAxis tick={{ fontSize: 8, fill: "hsl(215 15% 55%)" }} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="newHighs" fill="hsl(142 71% 45% / 0.7)" name="New Highs" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="newLows" fill="hsl(0 84% 60% / 0.7)" name="New Lows" radius={[2, 2, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* % Stocks Above EMA + Sector Rotation */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">% Stocks Above Key EMAs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow className="text-[10px]">
+                  <TableHead>Index</TableHead>
+                  <TableHead className="text-right">Above 20 EMA</TableHead>
+                  <TableHead className="text-right">Above 50 EMA</TableHead>
+                  <TableHead className="text-right">Above 200 EMA</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {breadth.emaCoverage.map(e => (
+                  <TableRow key={e.label} className="text-xs font-mono">
+                    <TableCell className="font-medium font-sans">{e.label}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Progress value={e.above20} className="h-1.5 w-16" />
+                        <span className={e.above20 > 50 ? "text-bullish" : "text-bearish"}>{e.above20}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Progress value={e.above50} className="h-1.5 w-16" />
+                        <span className={e.above50 > 50 ? "text-bullish" : "text-bearish"}>{e.above50}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Progress value={e.above200} className="h-1.5 w-16" />
+                        <span className={e.above200 > 50 ? "text-bullish" : "text-bearish"}>{e.above200}%</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Sector Rotation Map</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-2">
+              {breadth.sectorRotation.map(s => {
+                const qColor = {
+                  Leading: "bg-bullish/15 border-bullish/30 text-bullish",
+                  Improving: "bg-primary/10 border-primary/30 text-primary",
+                  Weakening: "bg-warning/10 border-warning/30 text-warning",
+                  Lagging: "bg-bearish/15 border-bearish/30 text-bearish",
+                }[s.quadrant] || "";
+                return (
+                  <div key={s.sector} className={`p-2 rounded-md border ${qColor}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium">{s.sector}</span>
+                      <Badge variant="outline" className="text-[8px] h-4">{s.quadrant}</Badge>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-[9px] text-muted-foreground">Mom: <span className="font-mono">{s.momentum > 0 ? "+" : ""}{s.momentum}</span></span>
+                      <span className="text-[9px] text-muted-foreground">Trend: <span className="font-mono">{s.trend > 0 ? "+" : ""}{s.trend}</span></span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Quick Access */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {["NIFTY", "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY"].map(symbol => (
