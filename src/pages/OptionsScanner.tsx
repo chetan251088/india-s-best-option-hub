@@ -9,7 +9,7 @@ import { getScannerResults, getIVAnalytics, generateIVHistory } from "@/lib/mock
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { Search, Filter, TrendingUp, TrendingDown, Zap, AlertTriangle, BarChart3 } from "lucide-react";
 
-const tooltipStyle = { backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" };
+const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 
 const signalColors: Record<string, string> = {
   "High IV Rank": "text-bearish",
@@ -242,9 +242,9 @@ export default function OptionsScanner() {
                           <stop offset="100%" stopColor="hsl(210 100% 52%)" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                      <XAxis dataKey="date" tick={{ fontSize: 8, fill: "hsl(215 15% 55%)" }} />
-                      <YAxis tick={{ fontSize: 8, fill: "hsl(215 15% 55%)" }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                      <XAxis dataKey="date" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} />
                       <Tooltip contentStyle={tooltipStyle} />
                       <Area type="monotone" dataKey="iv" stroke="hsl(210 100% 52%)" fill="url(#ivGrad)" strokeWidth={1.5} name="IV" />
                       <Line type="monotone" dataKey="hv" stroke="hsl(38 92% 50%)" strokeWidth={1} strokeDasharray="3 3" dot={false} name="HV" />

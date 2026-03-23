@@ -7,7 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { generateFIIDIIHistory, getRolloverData, generateFIIFuturesOI } from "@/lib/advancedMockData";
 import { TrendingUp, TrendingDown, Activity, Users } from "lucide-react";
 
-const tooltipStyle = { backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" };
+const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 
 export default function FIIDIIActivity() {
   const fiiDii = useMemo(() => generateFIIDIIHistory(), []);
@@ -85,12 +85,12 @@ export default function FIIDIIActivity() {
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={fiiDii}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                    <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                    <YAxis yAxisId="flow" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                    <YAxis yAxisId="nifty" orientation="right" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                    <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis yAxisId="flow" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis yAxisId="nifty" orientation="right" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
                     <Tooltip contentStyle={tooltipStyle} />
-                    <ReferenceLine yAxisId="flow" y={0} stroke="hsl(215 15% 40%)" />
+                    <ReferenceLine yAxisId="flow" y={0} stroke="hsl(var(--muted-foreground))" />
                     <Bar yAxisId="flow" dataKey="fiiNet" name="FII Net" radius={[2, 2, 0, 0]}>
                       {fiiDii.map((d, i) => <Cell key={i} fill={d.fiiNet >= 0 ? "hsl(142 71% 45% / 0.7)" : "hsl(0 84% 60% / 0.7)"} />)}
                     </Bar>
@@ -114,15 +114,15 @@ export default function FIIDIIActivity() {
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={fiiFuturesOI}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                    <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                    <YAxis yAxisId="oi" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                    <YAxis yAxisId="ratio" orientation="right" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} domain={[0.8, 1.3]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                    <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis yAxisId="oi" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis yAxisId="ratio" orientation="right" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} domain={[0.8, 1.3]} />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Area yAxisId="oi" type="monotone" dataKey="longOI" stroke="hsl(142 71% 45%)" fill="hsl(142 71% 45% / 0.1)" strokeWidth={1.5} name="Long OI" />
                     <Area yAxisId="oi" type="monotone" dataKey="shortOI" stroke="hsl(0 84% 60%)" fill="hsl(0 84% 60% / 0.1)" strokeWidth={1.5} name="Short OI" />
                     <Line yAxisId="ratio" type="monotone" dataKey="longShortRatio" stroke="hsl(38 92% 50%)" strokeWidth={2} dot={false} name="L/S Ratio" />
-                    <ReferenceLine yAxisId="ratio" y={1} stroke="hsl(215 15% 40%)" strokeDasharray="5 5" />
+                    <ReferenceLine yAxisId="ratio" y={1} stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -195,12 +195,12 @@ export default function FIIDIIActivity() {
                     });
                     return (
                       <ComposedChart data={cumData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                        <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                        <YAxis yAxisId="flow" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                        <YAxis yAxisId="nifty" orientation="right" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                        <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                        <YAxis yAxisId="flow" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                        <YAxis yAxisId="nifty" orientation="right" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
                         <Tooltip contentStyle={tooltipStyle} />
-                        <ReferenceLine yAxisId="flow" y={0} stroke="hsl(215 15% 40%)" />
+                        <ReferenceLine yAxisId="flow" y={0} stroke="hsl(var(--muted-foreground))" />
                         <Area yAxisId="flow" type="monotone" dataKey="cumFII" stroke="hsl(142 71% 45%)" fill="hsl(142 71% 45% / 0.1)" strokeWidth={2} name="Cum. FII (₹Cr)" />
                         <Area yAxisId="flow" type="monotone" dataKey="cumDII" stroke="hsl(210 100% 52%)" fill="hsl(210 100% 52% / 0.1)" strokeWidth={2} name="Cum. DII (₹Cr)" />
                         <Line yAxisId="nifty" type="monotone" dataKey="nifty" stroke="hsl(38 92% 50%)" strokeWidth={1.5} dot={false} name="Nifty" />

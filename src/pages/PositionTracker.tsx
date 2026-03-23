@@ -65,7 +65,7 @@ export default function PositionTracker() {
     return groups;
   }, [positions]);
 
-  const tooltipStyle = { backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" };
+  const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 
   return (
     <div className="space-y-4">
@@ -162,11 +162,11 @@ export default function PositionTracker() {
                           <stop offset="100%" stopColor="hsl(0 84% 60%)" stopOpacity={0.3} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                      <XAxis dataKey="spotPrice" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                      <YAxis tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                      <XAxis dataKey="spotPrice" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
                       <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`₹${v.toLocaleString("en-IN")}`, "P&L"]} />
-                      <ReferenceLine y={0} stroke="hsl(215 15% 40%)" />
+                      <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" />
                       <ReferenceLine x={simSpot} stroke="hsl(38 92% 50%)" strokeDasharray="3 3" label={{ value: "Spot", fill: "hsl(38 92% 50%)", fontSize: 9 }} />
                       <Area type="monotone" dataKey="totalPnl" stroke="hsl(210 100% 52%)" fill="url(#pnlGrad)" strokeWidth={2} name="Total P&L" />
                     </AreaChart>
@@ -189,16 +189,16 @@ export default function PositionTracker() {
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={greeksDecay}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(215 15% 55%)" }} />
-                    <YAxis yAxisId="pnl" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                    <YAxis yAxisId="delta" orientation="right" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis yAxisId="pnl" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis yAxisId="delta" orientation="right" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
                     <Tooltip contentStyle={tooltipStyle} formatter={(v: number, name: string) => {
                       if (name === "P&L") return [`₹${v.toLocaleString("en-IN")}`, "P&L"];
                       if (name === "Cum Theta") return [`₹${v.toLocaleString("en-IN")}`, "Cum Theta"];
                       return [v, name];
                     }} />
-                    <ReferenceLine yAxisId="pnl" y={0} stroke="hsl(215 15% 40%)" />
+                    <ReferenceLine yAxisId="pnl" y={0} stroke="hsl(var(--muted-foreground))" />
                     <Line yAxisId="pnl" type="monotone" dataKey="totalPnl" stroke="hsl(210 100% 52%)" strokeWidth={2} dot={{ fill: "hsl(210 100% 52%)", r: 3 }} name="P&L" />
                     <Line yAxisId="pnl" type="monotone" dataKey="totalTheta" stroke="hsl(38 92% 50%)" strokeWidth={1.5} strokeDasharray="5 5" dot={false} name="Cum Theta" />
                     <Bar yAxisId="delta" dataKey="totalDelta" fill="hsl(142 71% 45% / 0.3)" radius={[2, 2, 0, 0]} name="Delta" />

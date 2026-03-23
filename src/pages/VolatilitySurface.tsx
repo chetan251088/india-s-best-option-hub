@@ -9,7 +9,7 @@ import { generateIVSurface, getIVTermStructure } from "@/lib/advancedMockData";
 import { getIVAnalytics, generateIVHistory } from "@/lib/mockData";
 import { Activity, TrendingUp } from "lucide-react";
 
-const tooltipStyle = { backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" };
+const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 const spotMap: Record<string, { spot: number; step: number }> = {
   NIFTY: { spot: 24250.75, step: 50 },
   BANKNIFTY: { spot: 51850.40, step: 100 },
@@ -148,9 +148,9 @@ export default function VolatilitySurface() {
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={nearTermSkew}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                    <XAxis dataKey="strike" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                    <YAxis tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} domain={["dataMin - 1", "dataMax + 1"]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                    <XAxis dataKey="strike" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} domain={["dataMin - 1", "dataMax + 1"]} />
                     <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v.toFixed(2)}%`, ""]} />
                     <ReferenceLine x={atmStrike} stroke="hsl(210 100% 52%)" strokeDasharray="3 3" label={{ value: "ATM", fill: "hsl(210 100% 52%)", fontSize: 9 }} />
                     <Bar dataKey="iv" name="IV" radius={[2, 2, 0, 0]}>
@@ -176,9 +176,9 @@ export default function VolatilitySurface() {
                 <div className="h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={termStructure}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                      <XAxis dataKey="expiry" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                      <YAxis tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} domain={["dataMin - 1", "dataMax + 2"]} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                      <XAxis dataKey="expiry" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} domain={["dataMin - 1", "dataMax + 2"]} />
                       <Tooltip contentStyle={tooltipStyle} />
                       <Line type="monotone" dataKey="atmIV" stroke="hsl(38 92% 50%)" strokeWidth={2} dot={{ r: 4, fill: "hsl(38 92% 50%)" }} name="ATM IV %" />
                     </LineChart>
@@ -194,11 +194,11 @@ export default function VolatilitySurface() {
                 <div className="h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={termStructure}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                      <XAxis dataKey="expiry" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                      <YAxis tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                      <XAxis dataKey="expiry" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
                       <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v.toFixed(2)}%`, ""]} />
-                      <ReferenceLine y={0} stroke="hsl(215 15% 40%)" />
+                      <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" />
                       <Bar dataKey="putSkew" fill="hsl(0 84% 60% / 0.6)" name="Put Skew" radius={[2, 2, 0, 0]} />
                       <Bar dataKey="callSkew" fill="hsl(142 71% 45% / 0.6)" name="Call Skew" radius={[2, 2, 0, 0]} />
                     </BarChart>
@@ -226,9 +226,9 @@ export default function VolatilitySurface() {
                         <stop offset="100%" stopColor="hsl(210 100% 52%)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                    <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
-                    <YAxis tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                    <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Area type="monotone" dataKey="iv" stroke="hsl(210 100% 52%)" fill="url(#ivFill)" strokeWidth={2} name="Implied Vol" />
                     <Line type="monotone" dataKey="hv" stroke="hsl(38 92% 50%)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} name="Historical Vol" />
