@@ -260,6 +260,12 @@ export default function OIAnalysis() {
         <SupportResistance chain={chain} spotPrice={spotPrice} />
       </div>
 
+      {/* ── Multi-Expiry OI Overlay ── */}
+      <MultiExpiryOI symbol={symbol} />
+
+      {/* ── IV Percentile & PCR Trend ── */}
+      <IVPercentileGauge chain={chain} spotPrice={spotPrice} symbol={symbol} />
+
       <Tabs defaultValue="delta-oi">
         <TabsList className="flex-wrap">
           <TabsTrigger value="delta-oi">Delta OI</TabsTrigger>

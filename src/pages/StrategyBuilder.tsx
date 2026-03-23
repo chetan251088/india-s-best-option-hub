@@ -270,6 +270,9 @@ export default function StrategyBuilder() {
             </CardContent></Card>
           </div>
 
+          {/* Multi-DTE Payoff */}
+          <PayoffMultiDTE legs={legs} spotPrice={spotPrice} lotSize={lotSize} stepSize={stepSize} daysToExpiry={7} />
+
           {/* Combined Greeks */}
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Combined Position Greeks</CardTitle></CardHeader>
