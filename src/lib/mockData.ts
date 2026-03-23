@@ -150,6 +150,39 @@ export const futuresData: FuturesData[] = [
   { symbol: "NIFTY", spotPrice: 24250.75, futuresPrice: 24350.25, premium: 99.50, premiumPercent: 0.41, oi: 8900000, oiChange: 450000, volume: 320000, expiry: "24 Apr" },
 ];
 
+// ── Top Gainers & Losers ──
+
+export interface TopMoverData {
+  symbol: string;
+  ltp: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  sector: string;
+}
+
+export const topGainers: TopMoverData[] = [
+  { symbol: "DLF", ltp: 885.60, change: 27.85, changePercent: 3.25, volume: 9200000, sector: "Realty" },
+  { symbol: "TATASTEEL", ltp: 168.45, change: 4.85, changePercent: 2.96, volume: 18500000, sector: "Metal" },
+  { symbol: "BAJFINANCE", ltp: 7280.25, change: 145.80, changePercent: 2.04, volume: 4200000, sector: "NBFC" },
+  { symbol: "SUNPHARMA", ltp: 1680.30, change: 30.10, changePercent: 1.82, volume: 3800000, sector: "Pharma" },
+  { symbol: "HINDALCO", ltp: 625.70, change: 11.15, changePercent: 1.82, volume: 7600000, sector: "Metal" },
+  { symbol: "HDFCBANK", ltp: 1685.40, change: 22.60, changePercent: 1.36, volume: 7200000, sector: "Banking" },
+  { symbol: "RELIANCE", ltp: 2945.50, change: 38.20, changePercent: 1.31, volume: 8500000, sector: "Energy" },
+  { symbol: "ITC", ltp: 468.35, change: 5.80, changePercent: 1.25, volume: 11200000, sector: "FMCG" },
+];
+
+export const topLosers: TopMoverData[] = [
+  { symbol: "TATAMOTORS", ltp: 985.30, change: -18.45, changePercent: -1.84, volume: 12300000, sector: "Auto" },
+  { symbol: "SBIN", ltp: 825.75, change: -12.30, changePercent: -1.47, volume: 9800000, sector: "Banking" },
+  { symbol: "MARUTI", ltp: 12450.60, change: -185.40, changePercent: -1.47, volume: 1800000, sector: "Auto" },
+  { symbol: "WIPRO", ltp: 485.20, change: -5.85, changePercent: -1.19, volume: 6100000, sector: "IT" },
+  { symbol: "ICICIBANK", ltp: 1245.60, change: -8.90, changePercent: -0.71, volume: 5800000, sector: "Banking" },
+  { symbol: "TCS", ltp: 3850.70, change: -25.30, changePercent: -0.65, volume: 3900000, sector: "IT" },
+  { symbol: "HINDUNILVR", ltp: 2650.40, change: -13.80, changePercent: -0.52, volume: 2100000, sector: "FMCG" },
+  { symbol: "ONGC", ltp: 265.80, change: -1.20, changePercent: -0.45, volume: 8900000, sector: "Energy" },
+];
+
 // ── Most Active F&O ──
 
 function getOIInterpretation(priceChange: number, oiChange: number): MostActiveFnO["oiInterpretation"] {
