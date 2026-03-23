@@ -249,7 +249,17 @@ export default function OptionChain() {
                         </div>
                         <p className="text-[8px] text-muted-foreground">{straddle.toFixed(1)}</p>
                       </TableCell>
-                      <TableCell className={`text-left py-1.5 font-medium ${isITMPut ? "bg-bearish/10" : ""}`}>{row.pe.ltp.toFixed(2)}</TableCell>
+                      <TableCell className={`text-left py-1.5 font-medium ${isITMPut ? "bg-bearish/10" : ""}`}>
+                        <div className="flex items-center gap-1">
+                          <span>{row.pe.ltp.toFixed(2)}</span>
+                          <Tooltip><TooltipTrigger asChild>
+                            <button className="text-[8px] px-1 py-0.5 rounded bg-bullish/20 text-bullish hover:bg-bullish/30" onClick={(e) => { e.stopPropagation(); quickTrade(row.strikePrice, "PE", "BUY"); }}>B</button>
+                          </TooltipTrigger><TooltipContent className="text-[10px]">Buy PE {row.strikePrice}</TooltipContent></Tooltip>
+                          <Tooltip><TooltipTrigger asChild>
+                            <button className="text-[8px] px-1 py-0.5 rounded bg-bearish/20 text-bearish hover:bg-bearish/30" onClick={(e) => { e.stopPropagation(); quickTrade(row.strikePrice, "PE", "SELL"); }}>S</button>
+                          </TooltipTrigger><TooltipContent className="text-[10px]">Sell PE {row.strikePrice}</TooltipContent></Tooltip>
+                        </div>
+                      </TableCell>
                       <TableCell className={`text-left py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{(row.pe.volume / 1000).toFixed(1)}K</TableCell>
                       <TableCell className={`text-left py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>
                         <div className="flex items-center gap-1">
