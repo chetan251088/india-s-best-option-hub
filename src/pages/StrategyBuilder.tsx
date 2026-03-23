@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Plus, Trash2, TrendingUp, TrendingDown, Minus, Zap, Shield, Target } from "lucide-react";
 import { getPresetStrategies, calculatePayoff, calculateGreeks, estimateMargin, estimateProbOfProfit, type StrategyLeg } from "@/lib/mockData";
+import { PayoffMultiDTE } from "@/components/PayoffMultiDTE";
 
 const outlookIcons = {
   Bullish: <TrendingUp className="h-3 w-3 text-bullish" />,
@@ -268,6 +269,9 @@ export default function StrategyBuilder() {
               <p className="text-sm font-bold font-mono">{lotSize} × {legs.reduce((s, l) => s + l.lots, 0)} lots</p>
             </CardContent></Card>
           </div>
+
+          {/* Multi-DTE Payoff */}
+          <PayoffMultiDTE legs={legs} spotPrice={spotPrice} lotSize={lotSize} stepSize={stepSize} daysToExpiry={7} />
 
           {/* Combined Greeks */}
           <Card>

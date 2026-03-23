@@ -8,6 +8,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { getMaxPain, generatePCRHistory, getDeltaOI, getStrikePCR, getATMZoneAnalysis } from "@/lib/mockData";
 import { OIHeatmap } from "@/components/OIHeatmap";
 import { SupportResistance } from "@/components/SupportResistance";
+import { MultiExpiryOI } from "@/components/MultiExpiryOI";
+import { IVPercentileGauge } from "@/components/IVPercentileGauge";
 import { useLiveOptionChain } from "@/hooks/useNSEData";
 import { Wifi, WifiOff } from "lucide-react";
 
@@ -257,6 +259,12 @@ export default function OIAnalysis() {
         </div>
         <SupportResistance chain={chain} spotPrice={spotPrice} />
       </div>
+
+      {/* ── Multi-Expiry OI Overlay ── */}
+      <MultiExpiryOI symbol={symbol} />
+
+      {/* ── IV Percentile & PCR Trend ── */}
+      <IVPercentileGauge chain={chain} spotPrice={spotPrice} symbol={symbol} />
 
       <Tabs defaultValue="delta-oi">
         <TabsList className="flex-wrap">

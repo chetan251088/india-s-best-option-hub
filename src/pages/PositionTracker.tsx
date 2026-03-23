@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getMockPositions, simulatePnL, simulateGreeksDecay, type Position } from "@/lib/mockData";
 import { Plus, Trash2, TrendingUp, TrendingDown, DollarSign, PieChart, Shield, Clock, Activity, BarChart3 } from "lucide-react";
 import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart, Bar } from "recharts";
+import { WhatIfSimulator } from "@/components/WhatIfSimulator";
 
 export default function PositionTracker() {
   const [positions, setPositions] = useState<Position[]>(getMockPositions());
@@ -209,6 +210,9 @@ export default function PositionTracker() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* What-If Scenario Simulator */}
+      <WhatIfSimulator positions={positions} />
 
       {/* Add Position Form */}
       {showAddForm && (
