@@ -90,7 +90,7 @@ export default function Index() {
 
   return (
     <ErrorBoundary fallbackMessage="Dashboard failed to load">
-    <div className="space-y-5">
+    <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
