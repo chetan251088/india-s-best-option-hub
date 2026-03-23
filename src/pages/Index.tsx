@@ -89,6 +89,7 @@ export default function Index() {
   const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 
   return (
+    <ErrorBoundary fallbackMessage="Dashboard failed to load">
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
