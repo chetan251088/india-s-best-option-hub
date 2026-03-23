@@ -61,7 +61,7 @@ export default function DashboardLayout() {
         <AppSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Compact top bar */}
-          <header className="h-8 flex items-center border-b border-border px-3 shrink-0 bg-card/80 backdrop-blur-sm">
+          <header className="h-8 flex items-center border-b border-border px-2 sm:px-3 shrink-0 bg-card/80 backdrop-blur-sm overflow-x-auto">
             <SidebarTrigger className="mr-2 h-6 w-6" />
 
             {/* Ticker */}
@@ -134,7 +134,7 @@ export default function DashboardLayout() {
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto p-3 lg:p-4">
+          <main className="flex-1 overflow-auto p-2 sm:p-3 lg:p-4">
             <Outlet />
           </main>
         </div>
