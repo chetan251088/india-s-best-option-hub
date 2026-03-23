@@ -8,6 +8,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { getMaxPain, generatePCRHistory, getDeltaOI, getStrikePCR, getATMZoneAnalysis } from "@/lib/mockData";
 import { OIHeatmap } from "@/components/OIHeatmap";
 import { SupportResistance } from "@/components/SupportResistance";
+import { MultiExpiryOI } from "@/components/MultiExpiryOI";
+import { IVPercentileGauge } from "@/components/IVPercentileGauge";
 import { useLiveOptionChain } from "@/hooks/useNSEData";
 import { Wifi, WifiOff } from "lucide-react";
 
