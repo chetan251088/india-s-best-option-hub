@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Crosshair, Wifi, WifiOff, RefreshCw, ShoppingCart } from "lucide-react";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/context-menu";
+import { Crosshair, Wifi, WifiOff, RefreshCw, ShoppingCart, Bell, Eye, TrendingUp, TrendingDown, Layers } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { fnoStocks } from "@/lib/mockData";
 import { useLiveOptionChain } from "@/hooks/useNSEData";
+import { toast } from "sonner";
 
 const underlyings = [
   { label: "NIFTY 50", value: "NIFTY" },
@@ -40,6 +42,7 @@ export default function OptionChain() {
   const [showGreeks, setShowGreeks] = useState(false);
   const [showBidAsk, setShowBidAsk] = useState(false);
   const atmRef = useRef<HTMLTableRowElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const quickTrade = useCallback((strike: number, type: "CE" | "PE", action: "BUY" | "SELL") => {
     const params = new URLSearchParams({ symbol, strike: String(strike), type, action });
@@ -69,103 +72,151 @@ export default function OptionChain() {
     atmRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, []);
 
+  // Auto-scroll to ATM on first load
+  useEffect(() => {
+    if (chain.length > 0 && atmRef.current) {
+      setTimeout(() => atmRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+    }
+  }, [chain.length > 0]);
+
+  const handleContextAction = (strike: number, type: "CE" | "PE", action: string) => {
+    switch (action) {
+      case "buy":
+        quickTrade(strike, type, "BUY");
+        break;
+      case "sell":
+        quickTrade(strike, type, "SELL");
+        break;
+      case "straddle":
+        toast.success(`Added ${strike} Straddle to Strategy Builder`);
+        navigate(`/strategy?strike=${strike}&type=CE&action=BUY`);
+        break;
+      case "alert":
+        toast.success(`Alert set for ${symbol} ${strike} ${type}`);
+        break;
+      case "oi-analysis":
+        navigate(`/oi-analysis`);
+        break;
+      case "watchlist":
+        toast.success(`${symbol} added to Watchlist`);
+        break;
+    }
+  };
+
+  // Find ATM row data for sticky display
+  const atmRow = chain.find(o => o.strikePrice === atmStrike);
+
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Option Chain</h1>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
-            <Badge variant="outline" className={`gap-1 text-[10px] ${isLive ? "border-bullish text-bullish" : ""}`}>
-              {isLive ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-              {isLive ? (data?.source === "dhan" ? "DHAN LIVE" : "NSE LIVE") : "MOCK"}
-            </Badge>
-            <span>Spot: <span className="font-mono font-medium text-foreground">{spotPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span></span>
-            <span>Lot: <span className="font-mono">{lotSize}</span></span>
-            <span>Max Pain: <span className="font-mono text-warning">{maxPain.toLocaleString("en-IN")}</span></span>
-            <span>PCR: <span className={`font-mono font-medium ${Number(pcr) > 1 ? "text-bullish" : "text-bearish"}`}>{pcr}</span></span>
-            {currentExpiry && <span>Expiry: <span className="font-mono">{currentExpiry.daysToExpiry}d</span></span>}
+    <div className="space-y-3 lg:space-y-4">
+      {/* Header — stacks on mobile */}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight">Option Chain</h1>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+              <Badge variant="outline" className={`gap-1 text-[9px] sm:text-[10px] ${isLive ? "border-bullish text-bullish" : ""}`}>
+                {isLive ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+                {isLive ? (data?.source === "dhan" ? "DHAN" : "NSE") : "MOCK"}
+              </Badge>
+              <span>Spot: <span className="font-mono font-medium text-foreground">{spotPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span></span>
+              <span className="hidden sm:inline">Lot: <span className="font-mono">{lotSize}</span></span>
+              <span>MP: <span className="font-mono text-warning">{maxPain.toLocaleString("en-IN")}</span></span>
+              <span>PCR: <span className={`font-mono font-medium ${Number(pcr) > 1 ? "text-bullish" : "text-bearish"}`}>{pcr}</span></span>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Select value={symbol} onValueChange={(v) => { setSymbol(v); setSelectedExpiry(undefined); }}>
-            <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {underlyings.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          {expiries.length > 0 && (
-            <Select value={selectedExpiry || expiries[0]?.value} onValueChange={setSelectedExpiry}>
-              <SelectTrigger className="w-[170px] h-8 text-xs"><SelectValue /></SelectTrigger>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Select value={symbol} onValueChange={(v) => { setSymbol(v); setSelectedExpiry(undefined); }}>
+              <SelectTrigger className="w-[120px] sm:w-[150px] h-7 sm:h-8 text-[10px] sm:text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {expiries.map(e => <SelectItem key={e.value} value={e.value}>{e.label} ({e.daysToExpiry}d)</SelectItem>)}
+                {underlyings.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
               </SelectContent>
             </Select>
-          )}
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => refetch()}>
-            <RefreshCw className="h-3 w-3" /> Refresh
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={scrollToATM}>
-            <Crosshair className="h-3 w-3" /> ATM
-          </Button>
-          <div className="flex items-center gap-1.5">
-            <Switch id="greeks" checked={showGreeks} onCheckedChange={setShowGreeks} className="scale-75" />
-            <Label htmlFor="greeks" className="text-[10px]">Greeks</Label>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Switch id="bidask" checked={showBidAsk} onCheckedChange={setShowBidAsk} className="scale-75" />
-            <Label htmlFor="bidask" className="text-[10px]">Bid/Ask</Label>
+            {expiries.length > 0 && (
+              <Select value={selectedExpiry || expiries[0]?.value} onValueChange={setSelectedExpiry}>
+                <SelectTrigger className="w-[130px] sm:w-[170px] h-7 sm:h-8 text-[10px] sm:text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {expiries.map(e => <SelectItem key={e.value} value={e.value}>{e.label} ({e.daysToExpiry}d)</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+            <Button variant="outline" size="sm" className="h-7 sm:h-8 text-[10px] sm:text-xs gap-1 px-2" onClick={() => refetch()}>
+              <RefreshCw className="h-3 w-3" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 sm:h-8 text-[10px] sm:text-xs gap-1 px-2" onClick={scrollToATM}>
+              <Crosshair className="h-3 w-3" />
+              <span className="hidden sm:inline">ATM</span>
+            </Button>
+            <div className="hidden md:flex items-center gap-1.5">
+              <Switch id="greeks" checked={showGreeks} onCheckedChange={setShowGreeks} className="scale-75" />
+              <Label htmlFor="greeks" className="text-[10px]">Greeks</Label>
+            </div>
+            <div className="hidden md:flex items-center gap-1.5">
+              <Switch id="bidask" checked={showBidAsk} onCheckedChange={setShowBidAsk} className="scale-75" />
+              <Label htmlFor="bidask" className="text-[10px]">Bid/Ask</Label>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-        <div className="bg-card rounded-lg border p-2 text-center">
-          <p className="text-[9px] text-muted-foreground">Total CE OI</p>
-          <p className="text-sm font-bold font-mono">{(totalCEOI / 100000).toFixed(1)}L</p>
+      {/* Summary Stats — 3 cols on mobile, 6 on desktop */}
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 sm:gap-2">
+        <div className="bg-card rounded-lg border p-1.5 sm:p-2 text-center">
+          <p className="text-[8px] sm:text-[9px] text-muted-foreground">Total CE OI</p>
+          <p className="text-xs sm:text-sm font-bold font-mono">{(totalCEOI / 100000).toFixed(1)}L</p>
         </div>
-        <div className="bg-card rounded-lg border p-2 text-center">
-          <p className="text-[9px] text-muted-foreground">Total PE OI</p>
-          <p className="text-sm font-bold font-mono">{(totalPEOI / 100000).toFixed(1)}L</p>
+        <div className="bg-card rounded-lg border p-1.5 sm:p-2 text-center">
+          <p className="text-[8px] sm:text-[9px] text-muted-foreground">Total PE OI</p>
+          <p className="text-xs sm:text-sm font-bold font-mono">{(totalPEOI / 100000).toFixed(1)}L</p>
         </div>
-        <div className="bg-card rounded-lg border p-2 text-center">
-          <p className="text-[9px] text-muted-foreground">CE Volume</p>
-          <p className="text-sm font-bold font-mono">{(totalCEVol / 100000).toFixed(1)}L</p>
+        <div className="bg-card rounded-lg border p-1.5 sm:p-2 text-center">
+          <p className="text-[8px] sm:text-[9px] text-muted-foreground">CE Volume</p>
+          <p className="text-xs sm:text-sm font-bold font-mono">{(totalCEVol / 100000).toFixed(1)}L</p>
         </div>
-        <div className="bg-card rounded-lg border p-2 text-center">
-          <p className="text-[9px] text-muted-foreground">PE Volume</p>
-          <p className="text-sm font-bold font-mono">{(totalPEVol / 100000).toFixed(1)}L</p>
+        <div className="bg-card rounded-lg border p-1.5 sm:p-2 text-center">
+          <p className="text-[8px] sm:text-[9px] text-muted-foreground">PE Volume</p>
+          <p className="text-xs sm:text-sm font-bold font-mono">{(totalPEVol / 100000).toFixed(1)}L</p>
         </div>
-        <div className="bg-card rounded-lg border p-2 text-center">
-          <p className="text-[9px] text-muted-foreground">ATM Straddle</p>
-          <p className="text-sm font-bold font-mono text-warning">
-            {(() => {
-              const atm = chain.find(o => o.strikePrice === atmStrike);
-              return atm ? (atm.ce.ltp + atm.pe.ltp).toFixed(2) : "—";
-            })()}
+        <div className="bg-card rounded-lg border p-1.5 sm:p-2 text-center">
+          <p className="text-[8px] sm:text-[9px] text-muted-foreground">ATM Straddle</p>
+          <p className="text-xs sm:text-sm font-bold font-mono text-warning">
+            {atmRow ? (atmRow.ce.ltp + atmRow.pe.ltp).toFixed(2) : "—"}
           </p>
         </div>
-        <div className="bg-card rounded-lg border p-2 text-center">
-          <p className="text-[9px] text-muted-foreground">ATM IV</p>
-          <p className="text-sm font-bold font-mono">
-            {(() => {
-              const atm = chain.find(o => o.strikePrice === atmStrike);
-              return atm ? ((atm.ce.iv + atm.pe.iv) / 2).toFixed(1) + "%" : "—";
-            })()}
+        <div className="bg-card rounded-lg border p-1.5 sm:p-2 text-center">
+          <p className="text-[8px] sm:text-[9px] text-muted-foreground">ATM IV</p>
+          <p className="text-xs sm:text-sm font-bold font-mono">
+            {atmRow ? ((atmRow.ce.iv + atmRow.pe.iv) / 2).toFixed(1) + "%" : "—"}
           </p>
         </div>
       </div>
+
+      {/* Sticky ATM Summary Bar */}
+      {atmRow && (
+        <div className="sticky top-0 z-20 flex items-center justify-between gap-2 px-3 py-1.5 rounded-md bg-primary/5 border border-primary/20 text-[10px] font-mono">
+          <div className="flex items-center gap-3">
+            <span className="font-sans font-semibold text-primary">ATM {atmStrike}</span>
+            <span>CE: <span className="text-bullish font-medium">{atmRow.ce.ltp.toFixed(2)}</span></span>
+            <span>PE: <span className="text-bearish font-medium">{atmRow.pe.ltp.toFixed(2)}</span></span>
+            <span>Straddle: <span className="text-warning font-medium">{(atmRow.ce.ltp + atmRow.pe.ltp).toFixed(2)}</span></span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span>CE OI: {(atmRow.ce.oi / 1000).toFixed(0)}K</span>
+            <span>PE OI: {(atmRow.pe.oi / 1000).toFixed(0)}K</span>
+            <span>IV: {((atmRow.ce.iv + atmRow.pe.iv) / 2).toFixed(1)}%</span>
+          </div>
+        </div>
+      )}
 
       {/* Option Chain Table */}
       <Card>
-        <CardContent className="p-0 overflow-auto max-h-[65vh]">
+        <CardContent className="p-0 overflow-auto max-h-[60vh]" ref={tableRef}>
           {isLoading ? (
             <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">Loading option chain...</div>
           ) : (
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-card">
-                <TableRow className="text-[10px]">
+                <TableRow className="text-[9px] sm:text-[10px]">
                   <TableHead className="text-center text-bullish" colSpan={showGreeks ? (showBidAsk ? 8 : 6) : (showBidAsk ? 6 : 4)}>
                     CALLS (CE)
                   </TableHead>
@@ -174,21 +225,19 @@ export default function OptionChain() {
                     PUTS (PE)
                   </TableHead>
                 </TableRow>
-                <TableRow className="text-[10px]">
+                <TableRow className="text-[9px] sm:text-[10px]">
                   {showGreeks && <><TableHead className="text-right text-bullish">Δ</TableHead><TableHead className="text-right text-bullish">IV</TableHead></>}
                   {showBidAsk && <><TableHead className="text-right text-bullish">Bid</TableHead><TableHead className="text-right text-bullish">Ask</TableHead></>}
                   <TableHead className="text-right text-bullish">OI Chg</TableHead>
                   <TableHead className="text-right text-bullish">
-                    <div className="flex items-center justify-end gap-1">OI <span className="text-[8px] text-muted-foreground">Bar</span></div>
+                    <div className="flex items-center justify-end gap-1">OI</div>
                   </TableHead>
                   <TableHead className="text-right text-bullish">Vol</TableHead>
                   <TableHead className="text-right text-bullish font-bold">LTP</TableHead>
-                  <TableHead className="text-center font-bold bg-accent w-[100px]">STRIKE</TableHead>
+                  <TableHead className="text-center font-bold bg-accent w-[80px] sm:w-[100px]">STRIKE</TableHead>
                   <TableHead className="text-left text-bearish font-bold">LTP</TableHead>
                   <TableHead className="text-left text-bearish">Vol</TableHead>
-                  <TableHead className="text-left text-bearish">
-                    <div className="flex items-center gap-1"><span className="text-[8px] text-muted-foreground">Bar</span> OI</div>
-                  </TableHead>
+                  <TableHead className="text-left text-bearish">OI</TableHead>
                   <TableHead className="text-left text-bearish">OI Chg</TableHead>
                   {showBidAsk && <><TableHead className="text-left text-bearish">Bid</TableHead><TableHead className="text-left text-bearish">Ask</TableHead></>}
                   {showGreeks && <><TableHead className="text-left text-bearish">IV</TableHead><TableHead className="text-left text-bearish">Δ</TableHead></>}
@@ -203,86 +252,128 @@ export default function OptionChain() {
                   const straddle = row.ce.ltp + row.pe.ltp;
 
                   return (
-                    <TableRow
-                      key={row.strikePrice}
-                      ref={isATM ? atmRef : undefined}
-                      className={`text-[11px] font-mono ${isATM ? "bg-primary/10 border-y border-primary/30" : ""}`}
-                    >
-                      {showGreeks && (
-                        <>
-                          <TableCell className={`text-right py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>{row.ce.delta.toFixed(3)}</TableCell>
-                          <TableCell className={`text-right py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>{row.ce.iv.toFixed(1)}</TableCell>
-                        </>
-                      )}
-                      {showBidAsk && (
-                        <>
-                          <TableCell className={`text-right py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>{row.ce.bidPrice.toFixed(2)}</TableCell>
-                          <TableCell className={`text-right py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>{row.ce.askPrice.toFixed(2)}</TableCell>
-                        </>
-                      )}
-                      <TableCell className={`text-right py-1.5 ${isITMCall ? "bg-bullish/10" : ""} ${row.ce.oiChange > 0 ? "text-bullish" : "text-bearish"}`}>
-                        {row.ce.oiChange > 0 ? "+" : ""}{(row.ce.oiChange / 1000).toFixed(1)}K
-                      </TableCell>
-                      <TableCell className={`text-right py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>
-                        <div className="flex items-center justify-end gap-1">
-                          <span>{(row.ce.oi / 1000).toFixed(0)}K</span>
-                          <OIBar value={row.ce.oi} max={maxOI} side="call" />
-                        </div>
-                      </TableCell>
-                      <TableCell className={`text-right py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>{(row.ce.volume / 1000).toFixed(1)}K</TableCell>
-                      <TableCell className={`text-right py-1.5 font-medium ${isITMCall ? "bg-bullish/10" : ""}`}>
-                        <div className="flex items-center justify-end gap-1">
-                          <Tooltip><TooltipTrigger asChild>
-                            <button className="text-[8px] px-1 py-0.5 rounded bg-bullish/20 text-bullish hover:bg-bullish/30" onClick={(e) => { e.stopPropagation(); quickTrade(row.strikePrice, "CE", "BUY"); }}>B</button>
-                          </TooltipTrigger><TooltipContent className="text-[10px]">Buy CE {row.strikePrice}</TooltipContent></Tooltip>
-                          <Tooltip><TooltipTrigger asChild>
-                            <button className="text-[8px] px-1 py-0.5 rounded bg-bearish/20 text-bearish hover:bg-bearish/30" onClick={(e) => { e.stopPropagation(); quickTrade(row.strikePrice, "CE", "SELL"); }}>S</button>
-                          </TooltipTrigger><TooltipContent className="text-[10px]">Sell CE {row.strikePrice}</TooltipContent></Tooltip>
-                          <span>{row.ce.ltp.toFixed(2)}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center py-1.5 font-bold bg-accent">
-                        <div className="flex items-center justify-center gap-1">
-                          {row.strikePrice.toLocaleString("en-IN")}
-                          {isATM && <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary text-primary h-4">ATM</Badge>}
-                          {isMaxPain && <Badge variant="outline" className="text-[8px] px-1 py-0 border-warning text-warning h-4">MP</Badge>}
-                        </div>
-                        <p className="text-[8px] text-muted-foreground">{straddle.toFixed(1)}</p>
-                      </TableCell>
-                      <TableCell className={`text-left py-1.5 font-medium ${isITMPut ? "bg-bearish/10" : ""}`}>
-                        <div className="flex items-center gap-1">
-                          <span>{row.pe.ltp.toFixed(2)}</span>
-                          <Tooltip><TooltipTrigger asChild>
-                            <button className="text-[8px] px-1 py-0.5 rounded bg-bullish/20 text-bullish hover:bg-bullish/30" onClick={(e) => { e.stopPropagation(); quickTrade(row.strikePrice, "PE", "BUY"); }}>B</button>
-                          </TooltipTrigger><TooltipContent className="text-[10px]">Buy PE {row.strikePrice}</TooltipContent></Tooltip>
-                          <Tooltip><TooltipTrigger asChild>
-                            <button className="text-[8px] px-1 py-0.5 rounded bg-bearish/20 text-bearish hover:bg-bearish/30" onClick={(e) => { e.stopPropagation(); quickTrade(row.strikePrice, "PE", "SELL"); }}>S</button>
-                          </TooltipTrigger><TooltipContent className="text-[10px]">Sell PE {row.strikePrice}</TooltipContent></Tooltip>
-                        </div>
-                      </TableCell>
-                      <TableCell className={`text-left py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{(row.pe.volume / 1000).toFixed(1)}K</TableCell>
-                      <TableCell className={`text-left py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>
-                        <div className="flex items-center gap-1">
-                          <OIBar value={row.pe.oi} max={maxOI} side="put" />
-                          <span>{(row.pe.oi / 1000).toFixed(0)}K</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className={`text-left py-1.5 ${isITMPut ? "bg-bearish/10" : ""} ${row.pe.oiChange > 0 ? "text-bullish" : "text-bearish"}`}>
-                        {row.pe.oiChange > 0 ? "+" : ""}{(row.pe.oiChange / 1000).toFixed(1)}K
-                      </TableCell>
-                      {showBidAsk && (
-                        <>
-                          <TableCell className={`text-left py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{row.pe.bidPrice.toFixed(2)}</TableCell>
-                          <TableCell className={`text-left py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{row.pe.askPrice.toFixed(2)}</TableCell>
-                        </>
-                      )}
-                      {showGreeks && (
-                        <>
-                          <TableCell className={`text-left py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{row.pe.iv.toFixed(1)}</TableCell>
-                          <TableCell className={`text-left py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{row.pe.delta.toFixed(3)}</TableCell>
-                        </>
-                      )}
-                    </TableRow>
+                    <ContextMenu key={row.strikePrice}>
+                      <ContextMenuTrigger asChild>
+                        <TableRow
+                          ref={isATM ? atmRef : undefined}
+                          className={`text-[10px] sm:text-[11px] font-mono cursor-context-menu ${isATM ? "bg-primary/10 border-y border-primary/30" : ""}`}
+                        >
+                          {showGreeks && (
+                            <>
+                              <TableCell className={`text-right py-1 sm:py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>{row.ce.delta.toFixed(3)}</TableCell>
+                              <TableCell className={`text-right py-1 sm:py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>{row.ce.iv.toFixed(1)}</TableCell>
+                            </>
+                          )}
+                          {showBidAsk && (
+                            <>
+                              <TableCell className={`text-right py-1 sm:py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>{row.ce.bidPrice.toFixed(2)}</TableCell>
+                              <TableCell className={`text-right py-1 sm:py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>{row.ce.askPrice.toFixed(2)}</TableCell>
+                            </>
+                          )}
+                          <TableCell className={`text-right py-1 sm:py-1.5 ${isITMCall ? "bg-bullish/10" : ""} ${row.ce.oiChange > 0 ? "text-bullish" : "text-bearish"}`}>
+                            {row.ce.oiChange > 0 ? "+" : ""}{(row.ce.oiChange / 1000).toFixed(1)}K
+                          </TableCell>
+                          <TableCell className={`text-right py-1 sm:py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>
+                            <div className="flex items-center justify-end gap-1">
+                              <span>{(row.ce.oi / 1000).toFixed(0)}K</span>
+                              <OIBar value={row.ce.oi} max={maxOI} side="call" />
+                            </div>
+                          </TableCell>
+                          <TableCell className={`text-right py-1 sm:py-1.5 ${isITMCall ? "bg-bullish/10" : ""}`}>{(row.ce.volume / 1000).toFixed(1)}K</TableCell>
+                          <TableCell className={`text-right py-1 sm:py-1.5 font-medium ${isITMCall ? "bg-bullish/10" : ""}`}>
+                            <div className="flex items-center justify-end gap-1">
+                              <Tooltip><TooltipTrigger asChild>
+                                <button className="text-[8px] px-1 py-0.5 rounded bg-bullish/20 text-bullish hover:bg-bullish/30" onClick={(e) => { e.stopPropagation(); quickTrade(row.strikePrice, "CE", "BUY"); }}>B</button>
+                              </TooltipTrigger><TooltipContent className="text-[10px]">Buy CE {row.strikePrice}</TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild>
+                                <button className="text-[8px] px-1 py-0.5 rounded bg-bearish/20 text-bearish hover:bg-bearish/30" onClick={(e) => { e.stopPropagation(); quickTrade(row.strikePrice, "CE", "SELL"); }}>S</button>
+                              </TooltipTrigger><TooltipContent className="text-[10px]">Sell CE {row.strikePrice}</TooltipContent></Tooltip>
+                              <span>{row.ce.ltp.toFixed(2)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center py-1 sm:py-1.5 font-bold bg-accent">
+                            <div className="flex items-center justify-center gap-1">
+                              {row.strikePrice.toLocaleString("en-IN")}
+                              {isATM && <Badge variant="outline" className="text-[7px] sm:text-[8px] px-1 py-0 border-primary text-primary h-3.5 sm:h-4">ATM</Badge>}
+                              {isMaxPain && <Badge variant="outline" className="text-[7px] sm:text-[8px] px-1 py-0 border-warning text-warning h-3.5 sm:h-4">MP</Badge>}
+                            </div>
+                            <p className="text-[7px] sm:text-[8px] text-muted-foreground">{straddle.toFixed(1)}</p>
+                          </TableCell>
+                          <TableCell className={`text-left py-1 sm:py-1.5 font-medium ${isITMPut ? "bg-bearish/10" : ""}`}>
+                            <div className="flex items-center gap-1">
+                              <span>{row.pe.ltp.toFixed(2)}</span>
+                              <Tooltip><TooltipTrigger asChild>
+                                <button className="text-[8px] px-1 py-0.5 rounded bg-bullish/20 text-bullish hover:bg-bullish/30" onClick={(e) => { e.stopPropagation(); quickTrade(row.strikePrice, "PE", "BUY"); }}>B</button>
+                              </TooltipTrigger><TooltipContent className="text-[10px]">Buy PE {row.strikePrice}</TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild>
+                                <button className="text-[8px] px-1 py-0.5 rounded bg-bearish/20 text-bearish hover:bg-bearish/30" onClick={(e) => { e.stopPropagation(); quickTrade(row.strikePrice, "PE", "SELL"); }}>S</button>
+                              </TooltipTrigger><TooltipContent className="text-[10px]">Sell PE {row.strikePrice}</TooltipContent></Tooltip>
+                            </div>
+                          </TableCell>
+                          <TableCell className={`text-left py-1 sm:py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{(row.pe.volume / 1000).toFixed(1)}K</TableCell>
+                          <TableCell className={`text-left py-1 sm:py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>
+                            <div className="flex items-center gap-1">
+                              <OIBar value={row.pe.oi} max={maxOI} side="put" />
+                              <span>{(row.pe.oi / 1000).toFixed(0)}K</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className={`text-left py-1 sm:py-1.5 ${isITMPut ? "bg-bearish/10" : ""} ${row.pe.oiChange > 0 ? "text-bullish" : "text-bearish"}`}>
+                            {row.pe.oiChange > 0 ? "+" : ""}{(row.pe.oiChange / 1000).toFixed(1)}K
+                          </TableCell>
+                          {showBidAsk && (
+                            <>
+                              <TableCell className={`text-left py-1 sm:py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{row.pe.bidPrice.toFixed(2)}</TableCell>
+                              <TableCell className={`text-left py-1 sm:py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{row.pe.askPrice.toFixed(2)}</TableCell>
+                            </>
+                          )}
+                          {showGreeks && (
+                            <>
+                              <TableCell className={`text-left py-1 sm:py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{row.pe.iv.toFixed(1)}</TableCell>
+                              <TableCell className={`text-left py-1 sm:py-1.5 ${isITMPut ? "bg-bearish/10" : ""}`}>{row.pe.delta.toFixed(3)}</TableCell>
+                            </>
+                          )}
+                        </TableRow>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent className="w-48">
+                        <ContextMenuSub>
+                          <ContextMenuSubTrigger className="gap-2">
+                            <TrendingUp className="h-3.5 w-3.5 text-bullish" /> Buy
+                          </ContextMenuSubTrigger>
+                          <ContextMenuSubContent>
+                            <ContextMenuItem onClick={() => handleContextAction(row.strikePrice, "CE", "buy")} className="gap-2 text-xs">
+                              Buy CE {row.strikePrice} @ ₹{row.ce.ltp.toFixed(2)}
+                            </ContextMenuItem>
+                            <ContextMenuItem onClick={() => handleContextAction(row.strikePrice, "PE", "buy")} className="gap-2 text-xs">
+                              Buy PE {row.strikePrice} @ ₹{row.pe.ltp.toFixed(2)}
+                            </ContextMenuItem>
+                          </ContextMenuSubContent>
+                        </ContextMenuSub>
+                        <ContextMenuSub>
+                          <ContextMenuSubTrigger className="gap-2">
+                            <TrendingDown className="h-3.5 w-3.5 text-bearish" /> Sell
+                          </ContextMenuSubTrigger>
+                          <ContextMenuSubContent>
+                            <ContextMenuItem onClick={() => handleContextAction(row.strikePrice, "CE", "sell")} className="gap-2 text-xs">
+                              Sell CE {row.strikePrice} @ ₹{row.ce.ltp.toFixed(2)}
+                            </ContextMenuItem>
+                            <ContextMenuItem onClick={() => handleContextAction(row.strikePrice, "PE", "sell")} className="gap-2 text-xs">
+                              Sell PE {row.strikePrice} @ ₹{row.pe.ltp.toFixed(2)}
+                            </ContextMenuItem>
+                          </ContextMenuSubContent>
+                        </ContextMenuSub>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem onClick={() => handleContextAction(row.strikePrice, "CE", "straddle")} className="gap-2 text-xs">
+                          <Layers className="h-3.5 w-3.5" /> Build Straddle ({straddle.toFixed(1)})
+                        </ContextMenuItem>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem onClick={() => handleContextAction(row.strikePrice, "CE", "alert")} className="gap-2 text-xs">
+                          <Bell className="h-3.5 w-3.5" /> Set Alert
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => handleContextAction(row.strikePrice, "CE", "oi-analysis")} className="gap-2 text-xs">
+                          <Eye className="h-3.5 w-3.5" /> View OI Analysis
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
                   );
                 })}
               </TableBody>
