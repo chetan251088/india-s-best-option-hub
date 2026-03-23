@@ -9,7 +9,7 @@ import { getScannerResults, getIVAnalytics, generateIVHistory } from "@/lib/mock
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { Search, Filter, TrendingUp, TrendingDown, Zap, AlertTriangle, BarChart3 } from "lucide-react";
 
-const tooltipStyle = { backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" };
+const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 
 const signalColors: Record<string, string> = {
   "High IV Rank": "text-bearish",
