@@ -1,4 +1,4 @@
-import { LayoutDashboard, TableProperties, BarChart3, Calculator, Layers, TrendingUp, ScanSearch, Briefcase, CandlestickChart, Activity, Gauge, Users, Zap, Star } from "lucide-react";
+import { LayoutDashboard, TableProperties, BarChart3, Calculator, Layers, TrendingUp, ScanSearch, Briefcase, CandlestickChart, Activity, Gauge, Users, Zap, Star, Crosshair } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -32,6 +32,7 @@ const toolItems = [
   { title: "Scanner", url: "/scanner", icon: ScanSearch },
   { title: "Greeks Calc", url: "/greeks", icon: Calculator },
   { title: "Strategy Builder", url: "/strategy", icon: Layers },
+  { title: "Strategy Finder", url: "/strategy-finder", icon: Crosshair },
   { title: "FII/DII", url: "/fii-dii", icon: Users },
   { title: "Positions", url: "/positions", icon: Briefcase },
 ];

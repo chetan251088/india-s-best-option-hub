@@ -9,6 +9,7 @@ import OptionChain from "./pages/OptionChain";
 import OIAnalysis from "./pages/OIAnalysis";
 import GreeksCalculator from "./pages/GreeksCalculator";
 import StrategyBuilder from "./pages/StrategyBuilder";
+import StrategyFinder from "./pages/StrategyFinder";
 import OptionsScanner from "./pages/OptionsScanner";
 import PositionTracker from "./pages/PositionTracker";
 import PriceCharts from "./pages/PriceCharts";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/oi-analysis" element={<OIAnalysis />} />
             <Route path="/greeks" element={<GreeksCalculator />} />
             <Route path="/strategy" element={<StrategyBuilder />} />
+            <Route path="/strategy-finder" element={<StrategyFinder />} />
             <Route path="/scanner" element={<OptionsScanner />} />
             <Route path="/positions" element={<PositionTracker />} />
             <Route path="/charts" element={<PriceCharts />} />
