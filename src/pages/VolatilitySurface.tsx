@@ -4,10 +4,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell, ComposedChart, Area, AreaChart, ReferenceLine } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Cell, ComposedChart, Area, AreaChart, ReferenceLine, Legend } from "recharts";
 import { generateIVSurface, getIVTermStructure } from "@/lib/advancedMockData";
 import { getIVAnalytics, generateIVHistory } from "@/lib/mockData";
 import { Activity, TrendingUp } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 const spotMap: Record<string, { spot: number; step: number }> = {
@@ -26,6 +27,7 @@ function getHeatColor(iv: number, min: number, max: number): string {
 
 export default function VolatilitySurface() {
   const [symbol, setSymbol] = useState("NIFTY");
+  const [selectedExpiries, setSelectedExpiries] = useState<string[]>([]);
   const config = spotMap[symbol] || spotMap.NIFTY;
 
   const surface = useMemo(() => generateIVSurface(config.spot, config.step), [symbol]);
@@ -43,6 +45,23 @@ export default function VolatilitySurface() {
 
   // IV skew for current expiry
   const nearTermSkew = surface.filter(p => p.expiry === expiries[0]);
+
+  // Initialize selected expiries
+  const activeExpiries = selectedExpiries.length > 0 ? selectedExpiries : expiries.slice(0, 2);
+
+  // Multi-expiry IV smile data: one data point per strike with IV for each expiry
+  const multiExpirySmile = useMemo(() => {
+    return strikes.map(strike => {
+      const point: Record<string, any> = { strike };
+      activeExpiries.forEach(exp => {
+        const match = surface.find(p => p.strike === strike && p.expiry === exp);
+        point[exp] = match ? match.iv : null;
+      });
+      return point;
+    });
+  }, [strikes, activeExpiries, surface]);
+
+  const smileColors = ["hsl(210 100% 52%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(280 80% 60%)", "hsl(0 84% 60%)"];
 
   return (
     <div className="space-y-4">
@@ -91,13 +110,102 @@ export default function VolatilitySurface() {
         </CardContent></Card>
       </div>
 
-      <Tabs defaultValue="surface">
+      <Tabs defaultValue="smile">
         <TabsList className="flex-wrap">
+          <TabsTrigger value="smile">IV Smile</TabsTrigger>
           <TabsTrigger value="surface">IV Surface Heatmap</TabsTrigger>
-          <TabsTrigger value="skew">IV Skew</TabsTrigger>
+          <TabsTrigger value="skew">IV Skew Bars</TabsTrigger>
           <TabsTrigger value="term">Term Structure</TabsTrigger>
           <TabsTrigger value="history">IV vs HV History</TabsTrigger>
         </TabsList>
+
+        {/* Multi-Expiry IV Smile — like the reference image */}
+        <TabsContent value="smile">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Activity className="h-4 w-4" /> IV Smile / Skew by Expiry
+                </CardTitle>
+                <ToggleGroup
+                  type="multiple"
+                  value={activeExpiries}
+                  onValueChange={(v) => setSelectedExpiries(v.length > 0 ? v : expiries.slice(0, 2))}
+                  className="flex-wrap"
+                >
+                  {expiries.map((exp, i) => {
+                    const parts = exp.split(" ");
+                    return (
+                      <ToggleGroupItem
+                        key={exp}
+                        value={exp}
+                        className="text-[10px] h-7 px-2 data-[state=on]:bg-primary/15 data-[state=on]:text-primary"
+                      >
+                        <div className="flex flex-col items-center leading-none">
+                          <span className="text-[8px] text-muted-foreground">{parts[1] || ""}</span>
+                          <span className="font-bold">{parts[0]}</span>
+                        </div>
+                      </ToggleGroupItem>
+                    );
+                  })}
+                </ToggleGroup>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Classic volatility smile: IV plotted across strikes for each expiry. The U-shape shows how OTM options carry higher IV (crash/rally premium).
+                Dashed line = spot price. Compare near vs far expiries to spot term structure changes.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[450px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={multiExpirySmile} margin={{ top: 10, right: 60, bottom: 20, left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
+                    <XAxis
+                      dataKey="strike"
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      tickFormatter={(v) => v.toLocaleString("en-IN")}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      domain={["dataMin - 2", "dataMax + 5"]}
+                      tickFormatter={(v) => `${v.toFixed(0)}%`}
+                      orientation="right"
+                    />
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      formatter={(value: number, name: string) => [`${value?.toFixed(2)}%`, name]}
+                      labelFormatter={(label) => `Strike: ${Number(label).toLocaleString("en-IN")}`}
+                    />
+                    <ReferenceLine
+                      x={atmStrike}
+                      stroke="hsl(var(--muted-foreground))"
+                      strokeDasharray="6 4"
+                      strokeWidth={1.5}
+                      label={{ value: `Spot ${atmStrike.toLocaleString("en-IN")}`, position: "top", fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                    />
+                    {activeExpiries.map((exp, i) => (
+                      <Line
+                        key={exp}
+                        type="monotone"
+                        dataKey={exp}
+                        stroke={smileColors[i % smileColors.length]}
+                        strokeWidth={2.5}
+                        dot={false}
+                        name={exp}
+                        connectNulls
+                      />
+                    ))}
+                    <Legend
+                      verticalAlign="top"
+                      height={30}
+                      wrapperStyle={{ fontSize: "11px" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="surface">
           <Card>
