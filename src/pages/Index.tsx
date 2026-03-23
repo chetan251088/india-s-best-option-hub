@@ -2,12 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { marketStats, futuresData, mostActiveFnO, sectorData, generateIntradayData, generateVIXHistory } from "@/lib/mockData";
+import { marketStats, futuresData, mostActiveFnO, sectorData, generateIntradayData, generateVIXHistory, topGainers, topLosers } from "@/lib/mockData";
 import { useLiveIndices, useMarketStatus } from "@/hooks/useNSEData";
-import { TrendingUp, TrendingDown, Activity, BarChart3, Users, Clock, Zap, Globe, Wifi, WifiOff } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, BarChart3, Users, Clock, Zap, Globe, Wifi, WifiOff, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, Area } from "recharts";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, Area, BarChart, Bar, CartesianGrid, Cell, ReferenceLine } from "recharts";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -23,7 +23,19 @@ export default function Index() {
   const bankNiftyIntraday = useMemo(() => generateIntradayData(indices[1]?.prevClose || 52031, 0.6), [indices]);
   const vixHistory = useMemo(() => generateVIXHistory(), []);
 
+  // Futures premium/discount chart data
+  const futuresPremiumChart = useMemo(() => {
+    return futuresData.map(f => ({
+      label: `${f.symbol} ${f.expiry}`,
+      premium: f.premium,
+      premiumPct: f.premiumPercent,
+      spot: f.spotPrice,
+      futures: f.futuresPrice,
+    }));
+  }, []);
+
   const now = new Date();
+  const tooltipStyle = { backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" };
 
   return (
     <div className="space-y-5">
@@ -186,43 +198,162 @@ export default function Index() {
         </Card>
       </div>
 
-      {/* Futures Premium + VIX Chart */}
+      {/* ── TOP GAINERS & LOSERS ── */}
       <div className="grid lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><Globe className="h-4 w-4" /> Futures Premium/Discount</CardTitle>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <ArrowUpRight className="h-4 w-4 text-bullish" /> Top Gainers
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow className="text-xs">
+                <TableRow className="text-[10px]">
                   <TableHead>Symbol</TableHead>
-                  <TableHead>Expiry</TableHead>
-                  <TableHead className="text-right">Spot</TableHead>
-                  <TableHead className="text-right">Futures</TableHead>
-                  <TableHead className="text-right">Premium</TableHead>
-                  <TableHead className="text-right">OI Chg</TableHead>
+                  <TableHead>Sector</TableHead>
+                  <TableHead className="text-right">LTP</TableHead>
+                  <TableHead className="text-right">Change</TableHead>
+                  <TableHead className="text-right">Chg%</TableHead>
+                  <TableHead className="text-right">Volume</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {futuresData.map((f, i) => (
-                  <TableRow key={i} className="text-xs font-mono">
-                    <TableCell className="font-medium">{f.symbol}</TableCell>
-                    <TableCell className="text-muted-foreground">{f.expiry}</TableCell>
-                    <TableCell className="text-right">{f.spotPrice.toLocaleString("en-IN")}</TableCell>
-                    <TableCell className="text-right">{f.futuresPrice.toLocaleString("en-IN")}</TableCell>
-                    <TableCell className={`text-right ${f.premium >= 0 ? "text-bullish" : "text-bearish"}`}>
-                      {f.premium >= 0 ? "+" : ""}{f.premium.toFixed(2)} ({f.premiumPercent.toFixed(2)}%)
+                {topGainers.map(stock => (
+                  <TableRow
+                    key={stock.symbol}
+                    className="text-xs font-mono cursor-pointer hover:bg-accent/50"
+                    onClick={() => navigate(`/option-chain?symbol=${stock.symbol}`)}
+                  >
+                    <TableCell className="font-medium font-sans">{stock.symbol}</TableCell>
+                    <TableCell className="text-muted-foreground font-sans text-[10px]">{stock.sector}</TableCell>
+                    <TableCell className="text-right">{stock.ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="text-right text-bullish">+{stock.change.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      <span className="bg-bullish/10 text-bullish px-1.5 py-0.5 rounded text-[10px]">
+                        +{stock.changePercent.toFixed(2)}%
+                      </span>
                     </TableCell>
-                    <TableCell className={`text-right ${f.oiChange >= 0 ? "text-bullish" : "text-bearish"}`}>
-                      {f.oiChange >= 0 ? "+" : ""}{(f.oiChange / 100000).toFixed(1)}L
-                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">{(stock.volume / 100000).toFixed(1)}L</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <ArrowDownRight className="h-4 w-4 text-bearish" /> Top Losers
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="text-[10px]">
+                  <TableHead>Symbol</TableHead>
+                  <TableHead>Sector</TableHead>
+                  <TableHead className="text-right">LTP</TableHead>
+                  <TableHead className="text-right">Change</TableHead>
+                  <TableHead className="text-right">Chg%</TableHead>
+                  <TableHead className="text-right">Volume</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topLosers.map(stock => (
+                  <TableRow
+                    key={stock.symbol}
+                    className="text-xs font-mono cursor-pointer hover:bg-accent/50"
+                    onClick={() => navigate(`/option-chain?symbol=${stock.symbol}`)}
+                  >
+                    <TableCell className="font-medium font-sans">{stock.symbol}</TableCell>
+                    <TableCell className="text-muted-foreground font-sans text-[10px]">{stock.sector}</TableCell>
+                    <TableCell className="text-right">{stock.ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="text-right text-bearish">{stock.change.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      <span className="bg-bearish/10 text-bearish px-1.5 py-0.5 rounded text-[10px]">
+                        {stock.changePercent.toFixed(2)}%
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">{(stock.volume / 100000).toFixed(1)}L</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── FUTURES PREMIUM/DISCOUNT (Enhanced) ── */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2"><Globe className="h-4 w-4" /> Futures Premium / Discount vs Spot</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Visual bar chart */}
+              <div className="h-[180px] mb-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={futuresPremiumChart} layout="vertical" barSize={20}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
+                    <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: "hsl(215 15% 55%)" }} width={110} />
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      formatter={(value: number, name: string) => {
+                        if (name === "Premium") return [`₹${value.toFixed(2)}`, "Premium"];
+                        return [value.toFixed(2) + "%", "Premium %"];
+                      }}
+                    />
+                    <ReferenceLine x={0} stroke="hsl(215 15% 40%)" />
+                    <Bar dataKey="premium" name="Premium" radius={[0, 4, 4, 0]}>
+                      {futuresPremiumChart.map((entry, i) => (
+                        <Cell key={i} fill={entry.premium >= 0 ? "hsl(142 71% 45% / 0.7)" : "hsl(0 84% 60% / 0.7)"} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Detail table */}
+              <Table>
+                <TableHeader>
+                  <TableRow className="text-[10px]">
+                    <TableHead>Symbol</TableHead>
+                    <TableHead>Expiry</TableHead>
+                    <TableHead className="text-right">Spot</TableHead>
+                    <TableHead className="text-right">Futures</TableHead>
+                    <TableHead className="text-right">Premium</TableHead>
+                    <TableHead className="text-right">Basis %</TableHead>
+                    <TableHead className="text-right">OI Chg</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {futuresData.map((f, i) => (
+                    <TableRow key={i} className="text-xs font-mono">
+                      <TableCell className="font-medium font-sans">{f.symbol}</TableCell>
+                      <TableCell className="text-muted-foreground">{f.expiry}</TableCell>
+                      <TableCell className="text-right">{f.spotPrice.toLocaleString("en-IN")}</TableCell>
+                      <TableCell className="text-right">{f.futuresPrice.toLocaleString("en-IN")}</TableCell>
+                      <TableCell className={`text-right font-medium ${f.premium >= 0 ? "text-bullish" : "text-bearish"}`}>
+                        {f.premium >= 0 ? "+" : ""}₹{f.premium.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] ${f.premium >= 0 ? "bg-bullish/10 text-bullish" : "bg-bearish/10 text-bearish"}`}>
+                          {f.premium >= 0 ? "+" : ""}{f.premiumPercent.toFixed(2)}%
+                        </span>
+                      </TableCell>
+                      <TableCell className={`text-right ${f.oiChange >= 0 ? "text-bullish" : "text-bearish"}`}>
+                        {f.oiChange >= 0 ? "+" : ""}{(f.oiChange / 100000).toFixed(1)}L
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card>
           <CardHeader className="pb-2">
@@ -240,10 +371,27 @@ export default function Index() {
                   </defs>
                   <XAxis dataKey="time" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
                   <YAxis tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} domain={["auto", "auto"]} />
-                  <Tooltip contentStyle={{ backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" }} />
+                  <Tooltip contentStyle={tooltipStyle} />
                   <Area type="monotone" dataKey="vix" stroke="hsl(38 92% 50%)" fill="url(#vixGrad)" strokeWidth={1.5} dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
+            </div>
+            {/* Futures Basis Summary */}
+            <div className="mt-3 space-y-2">
+              <p className="text-[10px] text-muted-foreground font-medium">Basis Summary</p>
+              {futuresData.slice(0, 3).map((f, i) => (
+                <div key={i} className="flex items-center justify-between p-1.5 rounded bg-accent/30">
+                  <span className="text-[10px] font-medium">{f.symbol}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-mono font-bold ${f.premium >= 0 ? "text-bullish" : "text-bearish"}`}>
+                      {f.premium >= 0 ? "Premium" : "Discount"}
+                    </span>
+                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${f.premium >= 0 ? "bg-bullish/10 text-bullish" : "bg-bearish/10 text-bearish"}`}>
+                      {f.premium >= 0 ? "+" : ""}{f.premiumPercent.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
