@@ -7,7 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { generateFIIDIIHistory, getRolloverData, generateFIIFuturesOI } from "@/lib/advancedMockData";
 import { TrendingUp, TrendingDown, Activity, Users } from "lucide-react";
 
-const tooltipStyle = { backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" };
+const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 
 export default function FIIDIIActivity() {
   const fiiDii = useMemo(() => generateFIIDIIHistory(), []);

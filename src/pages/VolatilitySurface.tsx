@@ -9,7 +9,7 @@ import { generateIVSurface, getIVTermStructure } from "@/lib/advancedMockData";
 import { getIVAnalytics, generateIVHistory } from "@/lib/mockData";
 import { Activity, TrendingUp } from "lucide-react";
 
-const tooltipStyle = { backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" };
+const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 const spotMap: Record<string, { spot: number; step: number }> = {
   NIFTY: { spot: 24250.75, step: 50 },
   BANKNIFTY: { spot: 51850.40, step: 100 },

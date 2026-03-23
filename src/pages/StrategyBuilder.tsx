@@ -213,7 +213,7 @@ export default function StrategyBuilder() {
                     <XAxis dataKey="spot" tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
                     <YAxis tick={{ fontSize: 9, fill: "hsl(215 15% 55%)" }} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" }}
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" }}
                       formatter={(value: number) => [`₹${value.toLocaleString("en-IN")}`, "P&L"]}
                     />
                     <ReferenceLine y={0} stroke="hsl(215 15% 40%)" strokeWidth={1} />

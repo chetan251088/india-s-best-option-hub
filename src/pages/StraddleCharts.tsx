@@ -7,7 +7,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { generateStraddleIntraday, generateStraddleHistory } from "@/lib/advancedMockData";
 import { TrendingDown, Activity, Clock } from "lucide-react";
 
-const tooltipStyle = { backgroundColor: "hsl(220 18% 10%)", border: "1px solid hsl(220 14% 16%)", borderRadius: "8px", fontSize: "11px" };
+const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" };
 
 const spotMap: Record<string, { spot: number; ce: number; pe: number; step: number }> = {
   NIFTY: { spot: 24250.75, ce: 150, pe: 140, step: 50 },
