@@ -27,6 +27,7 @@ function getHeatColor(iv: number, min: number, max: number): string {
 
 export default function VolatilitySurface() {
   const [symbol, setSymbol] = useState("NIFTY");
+  const [selectedExpiries, setSelectedExpiries] = useState<string[]>([]);
   const config = spotMap[symbol] || spotMap.NIFTY;
 
   const surface = useMemo(() => generateIVSurface(config.spot, config.step), [symbol]);
@@ -44,6 +45,23 @@ export default function VolatilitySurface() {
 
   // IV skew for current expiry
   const nearTermSkew = surface.filter(p => p.expiry === expiries[0]);
+
+  // Initialize selected expiries
+  const activeExpiries = selectedExpiries.length > 0 ? selectedExpiries : expiries.slice(0, 2);
+
+  // Multi-expiry IV smile data: one data point per strike with IV for each expiry
+  const multiExpirySmile = useMemo(() => {
+    return strikes.map(strike => {
+      const point: Record<string, any> = { strike };
+      activeExpiries.forEach(exp => {
+        const match = surface.find(p => p.strike === strike && p.expiry === exp);
+        point[exp] = match ? match.iv : null;
+      });
+      return point;
+    });
+  }, [strikes, activeExpiries, surface]);
+
+  const smileColors = ["hsl(210 100% 52%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(280 80% 60%)", "hsl(0 84% 60%)"];
 
   return (
     <div className="space-y-4">
