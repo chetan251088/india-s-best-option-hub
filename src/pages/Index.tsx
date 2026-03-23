@@ -141,8 +141,6 @@ export default function Index() {
             </span>
           </div>
         )}
-          </span>
-        </div>
       </div>
 
       {/* Index Cards with Sparklines */}
