@@ -189,6 +189,128 @@ export default function Index() {
         })}
       </div>
 
+      {/* ── GIFT Nifty + Nearest Expiry Contracts ── */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        {/* GIFT Nifty Card */}
+        <Card className="border-primary/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Plane className="h-4 w-4 text-primary" /> GIFT Nifty (SGX)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {giftNifty && giftNifty.lastPrice > 0 ? (
+              <div className="space-y-3">
+                <div className="flex items-baseline gap-3">
+                  <span className="text-2xl font-bold font-mono">{giftNifty.lastPrice.toLocaleString("en-IN")}</span>
+                  <span className={`text-sm font-mono font-medium ${giftNifty.change >= 0 ? "text-bullish" : "text-bearish"}`}>
+                    {giftNifty.change >= 0 ? "+" : ""}{giftNifty.change.toFixed(0)} ({giftNifty.changePercent.toFixed(2)}%)
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <div className="p-2 rounded bg-accent/50">
+                    <p className="text-muted-foreground">Contracts</p>
+                    <p className="font-mono font-bold">{giftNifty.contractsTraded?.toLocaleString("en-IN") || "—"}</p>
+                  </div>
+                  <div className="p-2 rounded bg-accent/50">
+                    <p className="text-muted-foreground">Expiry</p>
+                    <p className="font-mono font-bold">{giftNifty.expiry || "—"}</p>
+                  </div>
+                </div>
+                {indicativeNifty && (
+                  <div className="p-2 rounded bg-accent/30 text-[10px]">
+                    <span className="text-muted-foreground">Nifty Close: </span>
+                    <span className="font-mono font-bold">{indicativeNifty.value.toLocaleString("en-IN")}</span>
+                    <span className="text-muted-foreground ml-2">Gap: </span>
+                    <span className={`font-mono font-bold ${(giftNifty.lastPrice - indicativeNifty.value) >= 0 ? "text-bullish" : "text-bearish"}`}>
+                      {(giftNifty.lastPrice - indicativeNifty.value) >= 0 ? "+" : ""}{(giftNifty.lastPrice - indicativeNifty.value).toFixed(0)} pts
+                    </span>
+                  </div>
+                )}
+                <p className="text-[9px] text-muted-foreground font-mono">{giftNifty.timestamp}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">GIFT Nifty data unavailable</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Nearest Expiry Contracts - NSE */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-warning" /> NSE F&O Expiry
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="text-[10px]">
+                  <TableHead>Contract</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Lot</TableHead>
+                  <TableHead className="text-right">Expiry</TableHead>
+                  <TableHead className="text-right">Time Left</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {nearestExpiries.filter(c => c.exchange === "NSE").map(c => {
+                  const isUrgent = c.timeLeft.startsWith("0d") || c.timeLeft.includes("h left");
+                  return (
+                    <TableRow key={c.symbol} className="text-[11px] font-mono cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/option-chain?symbol=${c.symbol}`)}>
+                      <TableCell className="font-sans font-medium">{c.symbol}</TableCell>
+                      <TableCell className="text-muted-foreground">{c.type}</TableCell>
+                      <TableCell>{c.lotSize}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{c.expiry ? new Date(c.expiry).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}</TableCell>
+                      <TableCell className="text-right">
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] ${isUrgent ? "bg-bearish/15 text-bearish font-bold" : "bg-warning/10 text-warning"}`}>
+                          {c.timeLeft}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* MCX Contracts */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-warning" /> MCX Commodity Expiry
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="text-[10px]">
+                  <TableHead>Contract</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Lot</TableHead>
+                  <TableHead className="text-right">Expiry</TableHead>
+                  <TableHead className="text-right">Time Left</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {nearestExpiries.filter(c => c.exchange === "MCX").map(c => (
+                  <TableRow key={c.symbol} className="text-[11px] font-mono">
+                    <TableCell className="font-sans font-medium">{c.symbol}</TableCell>
+                    <TableCell className="text-muted-foreground">{c.type}</TableCell>
+                    <TableCell>{c.lotSize}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{c.expiry ? new Date(c.expiry).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-accent text-muted-foreground">{c.timeLeft}</span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Market Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
         <Card>
