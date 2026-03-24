@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/context-menu";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Crosshair, Wifi, WifiOff, RefreshCw, Bell, TrendingUp, TrendingDown, Layers, ChevronLeft, ChevronRight, Settings2 } from "lucide-react";
+import { Crosshair, Wifi, WifiOff, RefreshCw, Bell, TrendingUp, TrendingDown, Layers, ChevronLeft, ChevronRight, Settings2, Flame } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
@@ -100,6 +100,24 @@ export default function OptionChain() {
   const totalCEVol = chain.reduce((s, o) => s + o.ce.volume, 0);
   const totalPEVol = chain.reduce((s, o) => s + o.pe.volume, 0);
   const atmRow = chain.find(o => o.strikePrice === atmStrike);
+
+  // ── Unusual Activity Detection: volume > 3x average OI ratio ──
+  const unusualActivity = useMemo(() => {
+    if (chain.length === 0) return { flags: new Map<number, { ce: boolean; pe: boolean }>(), count: 0, hotStrikes: [] as number[] };
+    const avgCEOI = totalCEOI / chain.length || 1;
+    const avgPEOI = totalPEOI / chain.length || 1;
+    const flags = new Map<number, { ce: boolean; pe: boolean }>();
+    const hotStrikes: number[] = [];
+    chain.forEach(row => {
+      const ceUnusual = row.ce.volume > avgCEOI * 3 && row.ce.volume > 50000;
+      const peUnusual = row.pe.volume > avgPEOI * 3 && row.pe.volume > 50000;
+      if (ceUnusual || peUnusual) {
+        flags.set(row.strikePrice, { ce: ceUnusual, pe: peUnusual });
+        hotStrikes.push(row.strikePrice);
+      }
+    });
+    return { flags, count: flags.size, hotStrikes };
+  }, [chain, totalCEOI, totalPEOI]);
 
   useEffect(() => {
     if (chain.length > 0 && atmRef.current && viewMode === "expiration") {
@@ -346,6 +364,28 @@ export default function OptionChain() {
         ))}
       </div>
 
+      {/* Unusual Activity Banner */}
+      {unusualActivity.count > 0 && (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-orange-500/10 border border-orange-500/25 text-[10px]">
+          <Flame className="h-3.5 w-3.5 text-orange-500 animate-pulse" />
+          <span className="font-semibold text-orange-500">{unusualActivity.count} Unusual Activity</span>
+          <span className="text-muted-foreground">strikes detected (Vol &gt; 3× avg OI):</span>
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+            {unusualActivity.hotStrikes.map(s => {
+              const flag = unusualActivity.flags.get(s)!;
+              return (
+                <Badge key={s} variant="outline" className="text-[9px] gap-1 border-orange-500/30 text-orange-500 shrink-0">
+                  {s.toLocaleString("en-IN")}
+                  {flag.ce && <span className="text-primary">CE</span>}
+                  {flag.ce && flag.pe && <span className="text-muted-foreground">+</span>}
+                  {flag.pe && <span className="text-bearish">PE</span>}
+                </Badge>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Sticky ATM Bar */}
       {atmRow && viewMode === "expiration" && (
         <div className="sticky top-0 z-20 flex items-center justify-between gap-2 px-3 py-1 rounded bg-primary/5 border border-primary/20 text-[10px] font-mono">
@@ -417,6 +457,8 @@ export default function OptionChain() {
                     const isITMPut = row.strikePrice > spotPrice;
                     const isMP = row.strikePrice === maxPain;
                     const avgIV = ((row.ce.iv + row.pe.iv) / 2).toFixed(1);
+                    const uaFlag = unusualActivity.flags.get(row.strikePrice);
+                    const hasUA = !!uaFlag;
 
                     return (
                       <ContextMenu key={row.strikePrice}>
@@ -425,7 +467,7 @@ export default function OptionChain() {
                             ref={isATM ? atmRef : undefined}
                             className={`text-[10px] sm:text-[11px] font-mono cursor-context-menu transition-colors hover:bg-accent/30 ${
                               isATM ? "bg-primary/[0.06] border-y border-primary/20" : ""
-                            }`}
+                            } ${hasUA ? "bg-orange-500/[0.04]" : ""}`}
                           >
                             {/* ── CALL SIDE ── */}
                             {columnConfig.iv && <TableCell className={`text-right py-1.5 tabular-nums ${isITMCall ? "text-muted-foreground/70" : ""}`}>{row.ce.iv.toFixed(1)}</TableCell>}
@@ -447,13 +489,17 @@ export default function OptionChain() {
                             {columnConfig.bid && <TableCell className="text-right py-1.5 tabular-nums">{row.ce.bidPrice.toFixed(2)}</TableCell>}
                             {columnConfig.volume && (
                               <TableCell className="text-right py-1.5">
-                                <VolumeBar value={row.ce.volume} max={maxVol} side="call" />
+                                <div className="flex items-center justify-end gap-0.5">
+                                  {uaFlag?.ce && <Flame className="h-3 w-3 text-orange-500 shrink-0" />}
+                                  <VolumeBar value={row.ce.volume} max={maxVol} side="call" />
+                                </div>
                               </TableCell>
                             )}
 
                             {/* ── STRIKE ── */}
                             <TableCell className="text-center py-1.5 bg-accent/50 border-l-2 border-border font-bold relative">
                               <div className="flex items-center justify-center gap-1">
+                                {hasUA && <Flame className="h-3 w-3 text-orange-500 animate-pulse shrink-0" />}
                                 {row.strikePrice.toLocaleString("en-IN")}
                                 {isATM && <Badge className="text-[7px] px-1 py-0 h-3.5 bg-foreground text-background">{symbol} {spotPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</Badge>}
                                 {isMP && <Badge variant="outline" className="text-[7px] px-1 py-0 h-3.5 border-warning text-warning">MP</Badge>}
@@ -464,7 +510,10 @@ export default function OptionChain() {
                             {/* ── PUT SIDE ── */}
                             {columnConfig.volume && (
                               <TableCell className="text-left py-1.5">
-                                <VolumeBar value={row.pe.volume} max={maxVol} side="put" />
+                                <div className="flex items-center gap-0.5">
+                                  <VolumeBar value={row.pe.volume} max={maxVol} side="put" />
+                                  {uaFlag?.pe && <Flame className="h-3 w-3 text-orange-500 shrink-0" />}
+                                </div>
                               </TableCell>
                             )}
                             {columnConfig.bid && <TableCell className="text-left py-1.5 tabular-nums">{row.pe.bidPrice.toFixed(2)}</TableCell>}
