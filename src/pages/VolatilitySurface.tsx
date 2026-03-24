@@ -118,6 +118,8 @@ export default function VolatilitySurface() {
         <TabsList className="flex-wrap">
           <TabsTrigger value="smile">IV Smile</TabsTrigger>
           <TabsTrigger value="surface">IV Surface Heatmap</TabsTrigger>
+          <TabsTrigger value="vrp">VRP Analysis</TabsTrigger>
+          <TabsTrigger value="greeks-heatmap">Greeks Heatmap</TabsTrigger>
           <TabsTrigger value="skew">IV Skew Bars</TabsTrigger>
           <TabsTrigger value="term">Term Structure</TabsTrigger>
           <TabsTrigger value="history">IV vs HV History</TabsTrigger>
