@@ -138,6 +138,118 @@ export function getIVTermStructure(spotPrice: number, stepSize: number): IVTermS
   });
 }
 
+// ── VRP (Volatility Risk Premium) Data ──
+
+export interface VRPPoint {
+  date: string;
+  iv: number;
+  rv: number;      // realized volatility
+  vrp: number;     // IV - RV
+  vrpCumulative: number;
+}
+
+export function generateVRPHistory(symbol: string): VRPPoint[] {
+  const seed = symbol === "NIFTY" ? 42 : symbol === "BANKNIFTY" ? 77 : 99;
+  const rand = seededRandom(seed);
+  const points: VRPPoint[] = [];
+  let iv = 13 + rand() * 4;
+  let rv = iv * (0.65 + rand() * 0.2);
+  let cumVRP = 0;
+
+  for (let d = 90; d >= 0; d--) {
+    iv += (rand() - 0.48) * 0.8;
+    rv += (rand() - 0.5) * 0.6;
+    iv = Math.max(8, Math.min(35, iv));
+    rv = Math.max(5, Math.min(30, rv));
+    const vrp = iv - rv;
+    cumVRP += vrp;
+    const dt = new Date();
+    dt.setDate(dt.getDate() - d);
+    if (dt.getDay() === 0 || dt.getDay() === 6) continue;
+    points.push({
+      date: `${dt.getDate()}/${dt.getMonth() + 1}`,
+      iv: Math.round(iv * 100) / 100,
+      rv: Math.round(rv * 100) / 100,
+      vrp: Math.round(vrp * 100) / 100,
+      vrpCumulative: Math.round(cumVRP * 100) / 100,
+    });
+  }
+  return points;
+}
+
+// ── Greeks Heatmap Data ──
+
+export interface GreeksHeatmapPoint {
+  strike: number;
+  expiry: string;
+  daysToExpiry: number;
+  ceDelta: number;
+  ceGamma: number;
+  ceTheta: number;
+  ceVega: number;
+  peDelta: number;
+  peGamma: number;
+  peTheta: number;
+  peVega: number;
+}
+
+export function generateGreeksHeatmap(spotPrice: number, stepSize: number): GreeksHeatmapPoint[] {
+  const rand = seededRandom(Math.round(spotPrice * 13));
+  const expiries = [
+    { label: "27 Mar", days: 4 }, { label: "3 Apr", days: 11 },
+    { label: "10 Apr", days: 18 }, { label: "17 Apr", days: 25 },
+    { label: "24 Apr", days: 32 },
+  ];
+  const atm = Math.round(spotPrice / stepSize) * stepSize;
+  const points: GreeksHeatmapPoint[] = [];
+
+  for (const exp of expiries) {
+    for (let i = -6; i <= 6; i++) {
+      const strike = atm + i * stepSize;
+      const moneyness = (spotPrice - strike) / spotPrice; // positive = ITM for calls
+      const sqrtT = Math.sqrt(exp.days / 365);
+      const d1Approx = moneyness / (0.13 * sqrtT + 0.001);
+
+      // Approximate Black-Scholes Greeks
+      const nd1 = Math.exp(-d1Approx * d1Approx / 2) / Math.sqrt(2 * Math.PI);
+      const Nd1 = 0.5 * (1 + erf(d1Approx / Math.sqrt(2)));
+
+      const ceDelta = Math.max(0.01, Math.min(0.99, Nd1 + (rand() - 0.5) * 0.02));
+      const peDelta = ceDelta - 1;
+      const gamma = nd1 / (spotPrice * 0.13 * sqrtT + 0.001) * 100;
+      const ceGamma = Math.max(0.0001, gamma + (rand() - 0.5) * 0.001);
+      const ceTheta = -(spotPrice * 0.13 * nd1) / (2 * sqrtT * 365 + 0.01) - (rand() * 2);
+      const ceVega = spotPrice * sqrtT * nd1 / 100 * (1 + (rand() - 0.5) * 0.1);
+
+      points.push({
+        strike,
+        expiry: exp.label,
+        daysToExpiry: exp.days,
+        ceDelta: Math.round(ceDelta * 1000) / 1000,
+        ceGamma: Math.round(ceGamma * 10000) / 10000,
+        ceTheta: Math.round(ceTheta * 100) / 100,
+        ceVega: Math.round(ceVega * 100) / 100,
+        peDelta: Math.round(peDelta * 1000) / 1000,
+        peGamma: Math.round(ceGamma * 10000) / 10000,
+        peTheta: Math.round((ceTheta - rand() * 0.5) * 100) / 100,
+        peVega: Math.round(ceVega * 100) / 100,
+      });
+    }
+  }
+  return points;
+}
+
+// Simple error function approximation
+function erf(x: number): number {
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429;
+  const p = 0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x);
+  const t = 1 / (1 + p * x);
+  const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return sign * y;
+}
+
 // ── FII/DII Activity ──
 
 export interface FIIDIIDay {
