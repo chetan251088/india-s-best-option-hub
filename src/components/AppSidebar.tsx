@@ -25,6 +25,7 @@ const mainItems = [
   { title: "OI Analysis", url: "/oi-analysis", icon: BarChart3, shortcut: "5" },
   { title: "OI Spurts", url: "/oi-spurts", icon: Zap },
   { title: "GEX Analysis", url: "/gex", icon: Atom, shortcut: "6" },
+  { title: "Skew Dashboard", url: "/skew", icon: TrendingUp },
 ];
 
 const toolItems = [
