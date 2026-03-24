@@ -467,7 +467,7 @@ export default function OptionChain() {
                             ref={isATM ? atmRef : undefined}
                             className={`text-[10px] sm:text-[11px] font-mono cursor-context-menu transition-colors hover:bg-accent/30 ${
                               isATM ? "bg-primary/[0.06] border-y border-primary/20" : ""
-                            }`}
+                            } ${hasUA ? "bg-orange-500/[0.04]" : ""}`}
                           >
                             {/* ── CALL SIDE ── */}
                             {columnConfig.iv && <TableCell className={`text-right py-1.5 tabular-nums ${isITMCall ? "text-muted-foreground/70" : ""}`}>{row.ce.iv.toFixed(1)}</TableCell>}
