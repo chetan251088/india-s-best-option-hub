@@ -24,6 +24,7 @@ const mainItems = [
   { title: "Option Chain", url: "/option-chain", icon: TableProperties, shortcut: "4" },
   { title: "OI Analysis", url: "/oi-analysis", icon: BarChart3, shortcut: "5" },
   { title: "OI Spurts", url: "/oi-spurts", icon: Zap },
+  { title: "GEX Analysis", url: "/gex", icon: Atom, shortcut: "6" },
 ];
 
 const toolItems = [

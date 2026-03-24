@@ -44,6 +44,7 @@ const App = () => (
             <Route path="/volatility" element={<VolatilitySurface />} />
             <Route path="/fii-dii" element={<FIIDIIActivity />} />
             <Route path="/oi-spurts" element={<OISpurts />} />
+            <Route path="/gex" element={<GammaExposure />} />
             <Route path="/watchlist" element={<Watchlist />} />
           </Route>
           <Route path="*" element={<NotFound />} />
