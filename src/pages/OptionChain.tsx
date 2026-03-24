@@ -457,6 +457,8 @@ export default function OptionChain() {
                     const isITMPut = row.strikePrice > spotPrice;
                     const isMP = row.strikePrice === maxPain;
                     const avgIV = ((row.ce.iv + row.pe.iv) / 2).toFixed(1);
+                    const uaFlag = unusualActivity.flags.get(row.strikePrice);
+                    const hasUA = !!uaFlag;
 
                     return (
                       <ContextMenu key={row.strikePrice}>
