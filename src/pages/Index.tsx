@@ -7,6 +7,8 @@ import { useLiveIndices, useMarketStatus, useExpiryList } from "@/hooks/useNSEDa
 import { DashboardSkeleton } from "@/components/LoadingSkeletons";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { TrendingUp, TrendingDown, Activity, BarChart3, Users, Clock, Zap, Globe, Wifi, WifiOff, ArrowUpRight, ArrowDownRight, CalendarClock, Plane } from "lucide-react";
+import { ExpectedMoveWidget } from "@/components/ExpectedMoveWidget";
+import { IVRankCard, IVRankDashboard } from "@/components/IVRankWidget";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, AreaChart, Area, BarChart, Bar, CartesianGrid, Cell, ReferenceLine, ComposedChart } from "recharts";
