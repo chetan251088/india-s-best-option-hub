@@ -46,6 +46,7 @@ const App = () => (
             <Route path="/fii-dii" element={<FIIDIIActivity />} />
             <Route path="/oi-spurts" element={<OISpurts />} />
             <Route path="/gex" element={<GammaExposure />} />
+            <Route path="/skew" element={<SkewDashboard />} />
             <Route path="/watchlist" element={<Watchlist />} />
           </Route>
           <Route path="*" element={<NotFound />} />
