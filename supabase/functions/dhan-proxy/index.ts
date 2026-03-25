@@ -130,7 +130,7 @@ serve(async (req) => {
             expiryList = await dhanFetch("/optionchain/expirylist", {
               UnderlyingScrip: underlying.underlyingScrip,
               UnderlyingSeg: underlying.expirySegment,
-            });
+            }, "POST", userClientId, userAccessToken);
             setCache(expiryListKey, expiryList, 60000);
             // Wait 3.5s to respect Dhan's rate limit before next call
             await new Promise(r => setTimeout(r, 3500));
@@ -149,7 +149,7 @@ serve(async (req) => {
           body.ExpiryDate = expiryDate;
         }
 
-        result = await dhanFetch("/optionchain", body);
+        result = await dhanFetch("/optionchain", body, "POST", userClientId, userAccessToken);
         setCache(cacheKey, result, 3500);
         break;
       }
@@ -166,7 +166,7 @@ serve(async (req) => {
         result = await dhanFetch("/optionchain/expirylist", {
           UnderlyingScrip: underlying.underlyingScrip,
           UnderlyingSeg: underlying.expirySegment,
-        });
+        }, "POST", userClientId, userAccessToken);
         setCache(cacheKey, result, 60000); // 1 min cache for expiry list
         break;
       }
@@ -183,7 +183,7 @@ serve(async (req) => {
 
         result = await dhanFetch("/marketfeed/ltp", {
           NSE_FNO: [secInfo.secId],
-        });
+        }, "POST", userClientId, userAccessToken);
         setCache(cacheKey, result, 2000); // 2s cache for LTP
         break;
       }
