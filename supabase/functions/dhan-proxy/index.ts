@@ -26,9 +26,9 @@ function setCache(key: string, data: any, ttlMs: number) {
   }
 }
 
-async function dhanFetch(path: string, body?: any, method = "POST"): Promise<any> {
-  const clientId = Deno.env.get("DHAN_CLIENT_ID");
-  const accessToken = Deno.env.get("DHAN_ACCESS_TOKEN");
+async function dhanFetch(path: string, body?: any, method = "POST", customClientId?: string, customAccessToken?: string): Promise<any> {
+  const clientId = customClientId || Deno.env.get("DHAN_CLIENT_ID");
+  const accessToken = customAccessToken || Deno.env.get("DHAN_ACCESS_TOKEN");
 
   if (!clientId || !accessToken) {
     throw new Error("DHAN_CLIENT_ID or DHAN_ACCESS_TOKEN not configured");
@@ -84,6 +84,10 @@ serve(async (req) => {
     const url = new URL(req.url);
     const endpoint = url.searchParams.get("endpoint");
 
+    // Extract user-provided credentials from headers
+    const userClientId = req.headers.get("x-dhan-client-id") || undefined;
+    const userAccessToken = req.headers.get("x-dhan-access-token") || undefined;
+
     if (!endpoint) {
       return new Response(
         JSON.stringify({ error: "Missing 'endpoint' param. Use: option-chain, expiry-list, ltp, market-feed" }),
@@ -93,7 +97,8 @@ serve(async (req) => {
 
     const symbol = url.searchParams.get("symbol") || "NIFTY";
     const expiry = url.searchParams.get("expiry");
-    const cacheKey = `${endpoint}:${symbol}:${expiry || ""}`;
+    const userPrefix = userClientId ? `user:${userClientId}:` : "";
+    const cacheKey = `${userPrefix}${endpoint}:${symbol}:${expiry || ""}`;
 
     // Check cache first (3s TTL for option chain per Dhan rate limit)
     const cached = getCached(cacheKey);
