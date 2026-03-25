@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-dhan-client-id, x-dhan-access-token',
 };
 
 const DHAN_BASE = "https://api.dhan.co/v2";
@@ -26,9 +26,9 @@ function setCache(key: string, data: any, ttlMs: number) {
   }
 }
 
-async function dhanFetch(path: string, body?: any, method = "POST"): Promise<any> {
-  const clientId = Deno.env.get("DHAN_CLIENT_ID");
-  const accessToken = Deno.env.get("DHAN_ACCESS_TOKEN");
+async function dhanFetch(path: string, body?: any, method = "POST", customClientId?: string, customAccessToken?: string): Promise<any> {
+  const clientId = customClientId || Deno.env.get("DHAN_CLIENT_ID");
+  const accessToken = customAccessToken || Deno.env.get("DHAN_ACCESS_TOKEN");
 
   if (!clientId || !accessToken) {
     throw new Error("DHAN_CLIENT_ID or DHAN_ACCESS_TOKEN not configured");
@@ -84,6 +84,10 @@ serve(async (req) => {
     const url = new URL(req.url);
     const endpoint = url.searchParams.get("endpoint");
 
+    // Extract user-provided credentials from headers
+    const userClientId = req.headers.get("x-dhan-client-id") || undefined;
+    const userAccessToken = req.headers.get("x-dhan-access-token") || undefined;
+
     if (!endpoint) {
       return new Response(
         JSON.stringify({ error: "Missing 'endpoint' param. Use: option-chain, expiry-list, ltp, market-feed" }),
@@ -93,7 +97,8 @@ serve(async (req) => {
 
     const symbol = url.searchParams.get("symbol") || "NIFTY";
     const expiry = url.searchParams.get("expiry");
-    const cacheKey = `${endpoint}:${symbol}:${expiry || ""}`;
+    const userPrefix = userClientId ? `user:${userClientId}:` : "";
+    const cacheKey = `${userPrefix}${endpoint}:${symbol}:${expiry || ""}`;
 
     // Check cache first (3s TTL for option chain per Dhan rate limit)
     const cached = getCached(cacheKey);
@@ -125,7 +130,7 @@ serve(async (req) => {
             expiryList = await dhanFetch("/optionchain/expirylist", {
               UnderlyingScrip: underlying.underlyingScrip,
               UnderlyingSeg: underlying.expirySegment,
-            });
+            }, "POST", userClientId, userAccessToken);
             setCache(expiryListKey, expiryList, 60000);
             // Wait 3.5s to respect Dhan's rate limit before next call
             await new Promise(r => setTimeout(r, 3500));
@@ -144,7 +149,7 @@ serve(async (req) => {
           body.ExpiryDate = expiryDate;
         }
 
-        result = await dhanFetch("/optionchain", body);
+        result = await dhanFetch("/optionchain", body, "POST", userClientId, userAccessToken);
         setCache(cacheKey, result, 3500);
         break;
       }
@@ -161,7 +166,7 @@ serve(async (req) => {
         result = await dhanFetch("/optionchain/expirylist", {
           UnderlyingScrip: underlying.underlyingScrip,
           UnderlyingSeg: underlying.expirySegment,
-        });
+        }, "POST", userClientId, userAccessToken);
         setCache(cacheKey, result, 60000); // 1 min cache for expiry list
         break;
       }
@@ -178,7 +183,7 @@ serve(async (req) => {
 
         result = await dhanFetch("/marketfeed/ltp", {
           NSE_FNO: [secInfo.secId],
-        });
+        }, "POST", userClientId, userAccessToken);
         setCache(cacheKey, result, 2000); // 2s cache for LTP
         break;
       }

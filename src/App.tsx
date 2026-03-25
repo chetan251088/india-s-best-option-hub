@@ -21,6 +21,7 @@ import GammaExposure from "./pages/GammaExposure";
 import SkewDashboard from "./pages/SkewDashboard";
 import Watchlist from "./pages/Watchlist";
 import Documentation from "./pages/Documentation";
+import BrokerSettings from "./pages/BrokerSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/skew" element={<SkewDashboard />} />
             <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/docs" element={<Documentation />} />
+            <Route path="/broker-settings" element={<BrokerSettings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

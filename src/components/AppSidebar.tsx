@@ -1,4 +1,4 @@
-import { LayoutDashboard, TableProperties, BarChart3, Calculator, Layers, TrendingUp, ScanSearch, Briefcase, CandlestickChart, Activity, Gauge, Users, Zap, Star, Crosshair, Atom, BookOpen } from "lucide-react";
+import { LayoutDashboard, TableProperties, BarChart3, Calculator, Layers, TrendingUp, ScanSearch, Briefcase, CandlestickChart, Activity, Gauge, Users, Zap, Star, Crosshair, Atom, BookOpen, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -38,6 +38,7 @@ const toolItems = [
   { title: "FII/DII", url: "/fii-dii", icon: Users },
   { title: "Positions", url: "/positions", icon: Briefcase },
   { title: "Documentation", url: "/docs", icon: BookOpen },
+  { title: "Broker API Keys", url: "/broker-settings", icon: Settings },
 ];
 
 export function AppSidebar() {
