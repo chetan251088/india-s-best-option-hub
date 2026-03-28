@@ -1,4 +1,4 @@
-import { LayoutDashboard, TableProperties, BarChart3, Calculator, Layers, TrendingUp, ScanSearch, Briefcase, CandlestickChart, Activity, Gauge, Users, Zap, Star, Crosshair, Atom, BookOpen, Settings } from "lucide-react";
+import { LayoutDashboard, TableProperties, BarChart3, Star, Settings, Layers, Activity, Briefcase } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -15,29 +15,22 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useTheme } from "@/hooks/useTheme";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, TrendingUp } from "lucide-react";
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, shortcut: "1" },
-  { title: "Watchlist", url: "/watchlist", icon: Star, shortcut: "2" },
-  { title: "Charts", url: "/charts", icon: CandlestickChart, shortcut: "3" },
-  { title: "Option Chain", url: "/option-chain", icon: TableProperties, shortcut: "4" },
-  { title: "OI Analysis", url: "/oi-analysis", icon: BarChart3, shortcut: "5" },
-  { title: "OI Spurts", url: "/oi-spurts", icon: Zap },
-  { title: "GEX Analysis", url: "/gex", icon: Atom, shortcut: "6" },
-  { title: "Skew Dashboard", url: "/skew", icon: TrendingUp },
+  { title: "Option Chain", url: "/option-chain", icon: TableProperties, shortcut: "2" },
+  { title: "OI Analysis", url: "/oi-analysis", icon: BarChart3, shortcut: "3" },
+  { title: "Watchlist", url: "/watchlist", icon: Star, shortcut: "4" },
 ];
 
-const toolItems = [
-  { title: "Straddle Charts", url: "/straddle", icon: Activity },
-  { title: "IV Surface", url: "/volatility", icon: Gauge },
-  { title: "Scanner", url: "/scanner", icon: ScanSearch },
-  { title: "Greeks Calc", url: "/greeks", icon: Calculator },
-  { title: "Strategy Builder", url: "/strategy", icon: Layers },
-  { title: "Strategy Finder", url: "/strategy-finder", icon: Crosshair },
-  { title: "FII/DII", url: "/fii-dii", icon: Users },
-  { title: "Positions", url: "/positions", icon: Briefcase },
-  { title: "Documentation", url: "/docs", icon: BookOpen },
+const tradingItems = [
+  { title: "Strategy Builder", url: "/strategy-builder", icon: Layers, shortcut: "5" },
+  { title: "FII/DII Activity", url: "/fii-dii", icon: Activity, shortcut: "6" },
+  { title: "Position Tracker", url: "/position-tracker", icon: Briefcase, shortcut: "7" },
+];
+
+const settingItems = [
   { title: "Broker API Keys", url: "/broker-settings", icon: Settings },
 ];
 
@@ -45,6 +38,30 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { isDark, toggle: toggleTheme } = useTheme();
+
+  const renderNavItems = (items: { title: string; url: string; icon: typeof LayoutDashboard; shortcut?: string }[]) =>
+    items.map((item) => (
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton asChild>
+          <NavLink
+            to={item.url}
+            end={item.url === "/"}
+            className="group relative flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] text-sidebar-foreground transition-all duration-150 hover:bg-sidebar-accent hover:text-foreground"
+            activeClassName="bg-primary/10 text-primary font-medium before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[3px] before:rounded-r-full before:bg-primary"
+          >
+            <item.icon className="h-4 w-4 shrink-0" />
+            {!collapsed && (
+              <>
+                <span className="flex-1">{item.title}</span>
+                {"shortcut" in item && item.shortcut && (
+                  <kbd className="text-2xs font-mono text-muted-foreground/30 group-hover:text-muted-foreground/50 bg-transparent border-0 px-0">⌘{item.shortcut}</kbd>
+                )}
+              </>
+            )}
+          </NavLink>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    ));
 
   return (
     <Sidebar collapsible="icon">
@@ -55,8 +72,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div>
-              <h1 className="text-sm font-bold text-foreground tracking-tight leading-none">OptionsDesk</h1>
-              <p className="text-2xs text-muted-foreground mt-0.5 tracking-[0.15em] uppercase">F&O Terminal</p>
+              <h1 className="text-sm font-bold text-foreground tracking-tight leading-none">Mr. Chartist</h1>
+              <p className="text-2xs text-muted-foreground mt-0.5 tracking-[0.15em] uppercase">Options Terminal</p>
             </div>
           )}
         </div>
@@ -66,54 +83,25 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="text-2xs uppercase tracking-[0.15em] text-muted-foreground/50 px-2 mb-1 font-medium">Markets</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-0.5">
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/"}
-                      className="group relative flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] text-sidebar-foreground transition-all duration-150 hover:bg-sidebar-accent hover:text-foreground"
-                      activeClassName="bg-primary/10 text-primary font-medium before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[3px] before:rounded-r-full before:bg-primary"
-                    >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1">{item.title}</span>
-                          {item.shortcut && (
-                            <kbd className="text-2xs font-mono text-muted-foreground/30 group-hover:text-muted-foreground/50 bg-transparent border-0 px-0">⌘{item.shortcut}</kbd>
-                          )}
-                        </>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <SidebarMenu className="space-y-0.5">{renderNavItems(mainItems)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarSeparator className="my-2 opacity-30" />
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-2xs uppercase tracking-[0.15em] text-muted-foreground/50 px-2 mb-1 font-medium">Analytics & Tools</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-2xs uppercase tracking-[0.15em] text-muted-foreground/50 px-2 mb-1 font-medium">Trading Tools</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-0.5">
-              {toolItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className="group relative flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] text-sidebar-foreground transition-all duration-150 hover:bg-sidebar-accent hover:text-foreground"
-                      activeClassName="bg-primary/10 text-primary font-medium before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-4 before:w-[3px] before:rounded-r-full before:bg-primary"
-                    >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span className="flex-1">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <SidebarMenu className="space-y-0.5">{renderNavItems(tradingItems)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator className="my-2 opacity-30" />
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-2xs uppercase tracking-[0.15em] text-muted-foreground/50 px-2 mb-1 font-medium">Settings</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-0.5">{renderNavItems(settingItems)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

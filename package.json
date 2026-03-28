@@ -1,8 +1,31 @@
 {
-  "name": "vite_react_shadcn_ts",
-  "private": true,
-  "version": "0.0.0",
+  "name": "india-s-best-option-hub",
+  "version": "1.0.0",
+  "description": "India's most comprehensive open-source Options & Futures analytics terminal for NSE F&O traders.",
+  "private": false,
   "type": "module",
+  "author": "MrChartist",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MrChartist/india-s-best-option-hub.git"
+  },
+  "keywords": [
+    "options-trading",
+    "nse",
+    "nifty",
+    "banknifty",
+    "option-chain",
+    "oi-analysis",
+    "strategy-builder",
+    "iv-rank",
+    "greeks",
+    "fno",
+    "india",
+    "stock-market",
+    "react",
+    "typescript"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -80,7 +103,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "jsdom": "^20.0.3",
-    "lovable-tagger": "^1.1.13",
+
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
